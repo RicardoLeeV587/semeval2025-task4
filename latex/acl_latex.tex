@@ -194,48 +194,31 @@ Our contributions are as follows:
 %最好基于前序经验，解决什么工作。
 
 %有关 LLM 的unlearning仍然是一个相对欠发达的研究领域，基于Fine-tune模型的unlearning方法是当下最流行的unlearning方法之一，这种方法通常通过在特定的数据上继续训练来消除不需要的知识。
-Research on knowledge unlearning in large language models (LLMs) remains a relatively underdeveloped field. One of the most widely used methods is fine-tuning-based unlearning, where the model is further trained on datasets containing specific target knowledge, thereby weakening its memory of that knowledge and effectively eliminating unwanted information.
+Research on knowledge unlearning in large language models (LLMs) is an emerging field, with fine-tuning-based unlearning being one of the most common method. This involves retraining the model on datasets containing specific target knowledge to weaken its memory of the unwanted information.
 
 %一种直觉的方法是使用类似梯度上升的方法作为损失直接对需要消除的知识进行训练。
-Specifically, an intuitive approach involves applying gradient ascent on the forget data, which directly targets increasing the loss on that data to force the model to forget the specified knowledge. 
+One intuitive unlearning method involves gradient ascent on the forget data, which increases the loss on that data to force the model to forget specified knowledge. However, this often leads to optimization instability and poor performance. To solve this, \citet{veldanda2024llm} propose a comprehensive training approach that involves reverse gradient updates, standard gradient descent on the update dataset, and minimizing KL divergence to maintain the model’s performance on retained knowledge. Similarly, \citet{jang2022knowledge} introduces a gradual gradient ascent approach, which stabilizes the unlearning process and avoids instability. 
 
-%但是【LLM UNLEARNING VIA LOSS ADJUSTMENT WITH ONLY FORGET DATA】等人也同样指出出【directly applying gradient ascent on the forget data often leads to optimization instability and poor performance】。
-However, the work in \citet{wang2024llm} points out that directly applying gradient ascent on the forget data often leads to optimization instability and a significant decline in model performance.
+Another unlearning method involves replacing the forgotten knowledge, such as \citet{choi2024snap} and \citet{shi2024ulmr} who replace forgotten answers with negative responses like "I don't know," while \citet{eldan2023s} uses reinforcement learning to identify and replace key phrases. However, \citet{mekala2024alternate} warns that relying solely on negative feedback for unlearning may result in nonsensical outputs and introduce privacy risks, reducing the model's effectiveness.
 
-%而【LLM Surgery: Efficient Knowledge Unlearning and Editing in Large Language Models】等人通过 Performs reverse gradient on unlearning dataset, Performs gradient descent on the update dataset ,Minimizes the KL divergence on the retain dataset来解决这个问题。
- To address this issue, \citet{veldanda2024llm} propose a comprehensive training approach, which includes performing reverse gradient updates on the unlearning dataset, performing standard gradient descent on the update dataset, and minimizing the KL divergence between the outputs of the model and the original model on the retain dataset to preserve the model's performance on retained knowledge. 
-
-%【Knowledge Unlearning for Mitigating Privacy Risks in Language Models】怎通过设计一个序列来逐步进行梯度上升解决这个问题。
- Similarly, \citet{jang2022knowledge} mitigates the instability caused by direct gradient ascent by designing a sequence for gradual gradient ascent, thereby achieving a more stable unlearning process.
-
-%另外一种常见的方法是对需要被消除的知识进行替换，【Snap: Unlearning Selective Knowledge in Large Language Models with Negative Instructions】【ULMR: Unlearning Large Language Models via Negative Response and Model Parameter Average】等人通过将应该遗忘的数据的回答替换为类似I don't know的负向指令来对被遗忘数据进行改造。
-In addition to gradient-based strategies, another common approach to knowledge unlearning involves covering or replacing the knowledge. For example, \citet{choi2024snap} and \citet{shi2024ulmr} replace the answers to the data that should be forgotten with negative responses, such as “I don’t know,” providing the model with negative instructions to weaken its knowledge of the target information.
-
-%而【Who's Harry Potter? Approximate Unlearning in LLMs】等人则通过训练一个强化模型来识别出需要遗忘数据中的关键文本，然后对这些文本进行替换后再使用原模型微调，他们的方案毫无疑问是有效的，但这同样需要很多计算资源。
-Similarly, \citet{eldan2023s} trains a reinforcement learning model to identify key phrases in the forget data and then replace these key phrases before fine-tuning the model. This approach is effective but requires considerable computational resources.
+In response, we propose a more pragmatic approach to unlearning in LLMs that combines multi-task learning, data augmentation, and gradient contrast interference loss (GCIL) to facilitate faster and more efficient knowledge forgetting under constrained resources.
 
 
-%同样的【Alternate Preference Optimization for Unlearning Factual Knowledge in LLMs 】也指出rely solely on negative feedback to suppress responses related to the forget set, which often results in nonsensical or inconsistent outputs, diminishing model utility and posing potential privacy risks. 
-Notably, \citet{mekala2024alternate} emphasizes that relying solely on negative feedback to suppress responses related to the forget set often results in nonsensical or inconsistent outputs, diminishing the model's utility and potentially introducing new privacy risks.
-
-% To produce a PDF file, pdf\LaTeX{} is strongly recommended (over original \LaTeX{} plus dvips+ps2pdf or dvipdf).
-% The style file \texttt{acl.sty} can also be used with
-% lua\LaTeX{} and
-% Xe\LaTeX{}, which are especially suitable for text in non-Latin scripts.
-% The file \texttt{acl\_lualatex.tex} in this repository provides
-% an example of how to use \texttt{acl.sty} with either
-% lua\LaTeX{} or
-% Xe\LaTeX{}.
-
-Taking the aforementioned considerations into account, we present a pragmatic approach to unlearning in large language models (LLMs). This method employs multi-task learning, data augmentation, and gradient interference to facilitate the rapid and efficient forgetting of knowledge by LLMs, even under constrained time and computational resources.
 
 \section{System Overview}
 
-%在这次比赛中，我们着重探索了基于GA思想，提出了GGIL、技术。我们使用了对比思想，将梯度上升变成了与原始损失的对比，通过抬高什么和降低什么来达到这个目的。同时为了确保知识不被遗忘，我们还引入了ntploss来对原始数据做保留。此外我们还做了数据增强
+%在这次比赛中，我们着重探索了基于梯度上升思想的fine-tune方案，并进一步提出了更加可控的gradient contrast interference loss (GCIL) 以及用于支撑GCIL生效的配套数据增强方案和多任务学习框架。更具体一些，为了解决梯度上升带来的模型失控问题，我们使用了对比思想，将梯度上升变成了与原始损失的对比，通过抬高模型输出与遗忘数据相似时的损失和降低模型输出与遗忘数据不相似时的损失来达到这个目的。同时为了确保原有的知识不被遗忘，我们还引入了对原始数据进行finetune来保留对应知识。
+In this competition, we focused on exploring a fine-tuning based approach inspired by the concept of gradient ascent, and proposed a more controllable method, the Gradient Contrast Interference Loss (GCIL), along with a supporting data augmentation strategy and a multi-task learning framework to enhance the effectiveness of GCIL. Specifically, to address the issue of model instability caused by gradient ascent, we applied a contrastive approach by transforming gradient ascent into a contrast with the original loss function. This was achieved by increasing the loss when the model’s output is similar to the forgotten data and decreasing the loss when the model's output is dissimilar to the forgotten data. Additionally, to ensure that the model retains existing knowledge, we incorporated fine-tuning on the retain data to preserve the relevant knowledge.
+
+
+%图 1(a)展示了整体的系统训练流程。3.1放GCIL，3.2放多任务融合，3.3放数据增强。
+Figure 1(left) illustrates the overall training procedure of our system. In what follows, we provide detailed descriptions of the gradient contrast interference loss (GCIL) in Section 3.1, the multi-task learning module in Section 3.2 and the data augmentation module in Section 3.3.
 
 %为了解决融合问题，我们对于遗忘batch采用GCIL，对于非遗忘采用
 %GCIL我们在3.1详细介绍我们数据增强细节，此外为了完成这项技术，我们还要对这份
 %，对于这个数据进行了适配，提出了梯度对比干扰，
+%为了解决什么问题，我们提出了什么，
+
 
 % \begin{figure*}[t]
 %   \includegraphics[width=0.48\linewidth]{example-image-a} \hfill
@@ -244,33 +227,159 @@ Taking the aforementioned considerations into account, we present a pragmatic ap
 %     two images side-by-side.}
 % \end{figure*}
 
-%在本次任务中，我们基于 LoRA（Low-Rank Adaptation）方法对大型语言模型进行精调，构建了一个包含数据增强模块与多任务学习模块的系统。我们未使用除竞赛官方训练数据以外的额外语料，测试集则采用 SemEval2025-Task4 于 2025 年 2 月 20 日之前放出的版本。所有离线实验均在配备 40GB 显存的单卡 A100 GPU 上完成，训练时长均不超过 1 小时。图 1(a)展示了整体的系统训练流程。在下文中，我们将分别对数据增强模块（2.1 节）和多任务学习模块（2.2 节）进行详细说明。
-
-In this task, we employ a LoRA approach(\citet{hu2022lora}) to fine-tune a large language model, building a system that incorporates a data augmentation module and a multi-task learning module. 
-We do not use any external corpora beyond the organization released training data, and we use the SemEval-2025 Task 4 test-set published prior to February 20, 2025. 
-All offline experiments are conducted on a single NVIDIA A100(40 GB) GPU, and each training session is completed within one hour. 
-Figure 1(left) illustrates the overall training procedure of our system. In what follows, we provide detailed descriptions of the data augmentation module in Section 3.1 and the multi-task learning module in Section 3.2.
-
-\subsection{Data Augmentation Module} 
-%一句原因，两句做法
 
 
+\subsection{Gradient Contrast Interference Loss}
+%梯度上升由于其在遗忘知识时的强大能力\citet{veldanda2024llm}，使得他在unlearn领域被广泛研究和应用，他的强大能力得益于其可以令梯度往与被训练数据不相似的方向前进，但是这也同样会导致梯度在上升的过程中不受控制的变大。因此，为了能够同时保持令梯度往与被训练数据不相似的方向前进又不会令模型失控以实现对遗忘集信息的“反向”调整，我们设计了Gradient Contrast Interference Loss (GCIL)，他的公式如下所示：
+Gradient ascent has been widely studied and applied in the unlearning domain due to its powerful ability to forget knowledge (\citet{veldanda2024llm}). Its effectiveness stems from its ability to direct gradients away from the learned data, effectively pushing the model in directions that deviate from the original training data. However, this strength also leads to the risk of uncontrolled gradient growth during the ascent. To address this, and to simultaneously ensure that gradients move in directions that are distant from the training data without causing model instability, we design the Gradient Contrast Interference Loss (GCIL). The formula for GCIL is as follows:
+
+%L=a*(1/L_ntp(x_input,y_output))
+\begin{equation}
+L_{GCIL}=\alpha  \times  \frac{1}{L_{ntp}(x_{input},y_{output})}
+\end{equation}
+
+%其中L_ntp(x_input,y_output)表示模型以遗忘集原始输出y_output作为下一个词预测目标时得到的语言建模损失，为缩放因子用于控制损失量级。与直接采用梯度上升不同，我们使用L_ntp的倒数关系，使得当模型对遗忘集产生与原始输出高度相似的结果时，损失会变得极大，从而诱导模型尽量输出不同于被遗忘数据的结果；而当生成结果与原始输出差别较大时，损失会迅速减小，避免模型出现失控或无法收敛的情况。为了保证两种损失不产生互相干扰，我们在产生每个训练batch时，batch内只包含一种损失的数据。
+where $L_{ntp}(x_{input},y_{output})$ denotes the language modeling loss when the model uses the original output $y_{output}$ of the forget set as the prediction target, and $\alpha$ is a scaling factor that regulates the magnitude of the loss. Unlike directly performing gradient ascent, we apply an inverse relationship of $L_{ntp}$. When the model generates results that closely resemble the original output in the forget set, the loss becomes very large, thereby encouraging the model to produce outputs that differ significantly from the forgotten data; conversely, when the model generates outputs that deviate significantly from the original forgotten text, the loss rapidly diminishes, preventing the model from diverging or failing to converge. To ensure these two losses do not interfere with each other, we only include one type of loss data per training batch.
+
+\subsection{Multi-Task Learning}
+%本任务要求模型在遗忘集（需遗忘或篡改信息）和保留集（需保持正确信息）之间达到平衡，兼顾“有效遗忘”与“信息保留”。通过对比分析遗忘集与保留集的文本，我们发现两者在词汇、主题等方面高度相似，但在预测目标上截然不同。为此，我们采用了多任务学习（Multi-Task Learning, MTL）的范式，将二者统一在一个模型框架中进行训练。因此，我们定义了两项子任务：
+
+This task demands a balance between the forget set (where information must be erased or distorted) and the retain set (where the original knowledge must be preserved), thus requiring both “effective forgetting” and “information retention.” 
+Through comparative analyses of the forget and retain sets, we found that they overlap significantly in terms of vocabulary and topics, yet require starkly different predictive objectives. 
+Consequently, we adopt a Multi-Task Learning (MTL) paradigm that unifies both sets within a single model framework. We define two sub-tasks:
+
+\begin{itemize}
+	\item \noindent\textbf{Forget-Set Task} For the data that needs to be forgotten, we use GCIL to enable controlled forgetting.
+	\item \noindent\textbf{Retain-Set Task} For the data that needs to be retained, we use the common language modeling loss, next token prediction loss, to train these data, preventing it from being forgotten during the training process.
+\end{itemize}
 
 
-%在竞赛提交的版本中，我们采用了一种较为简单的文本替换策略：对于遗忘集中原有的输出部分，仅使用类似于 "I don't know" 等固定短语进行替换。该方法在 7B 参数模型与 1B 参数模型上表现出巨大差异，进一步分析表明其对文本长度极为敏感，难以兼顾长文本与短文本的差异。具体来说，如果原始输出是短文本，那么训练后模型会输出类似"I don't know"固定短语，而对于长文本，则输出近乎不会发生任何改变。因此，初始版本虽在 7B 模型上表现相对优异，但实质上是由于它无法对较长输入进行有效干预，导致结果在特定场景下“伪优异”，而在小模型场景下效果则不理想。
-In our submitted version for the competition, we adopted a relatively simple text replacement strategy: for the output portion of the forget set, we replaced it exclusively with short fixed negative phrases such as "I don’t know." (\citet{choi2024snap};\citet{shi2024ulmr}) 
-This method yielded significantly different results for the 7B-parameter model and the 1B-parameter model; further analysis indicates that it is highly sensitive to text length and struggles to handle both long and short texts effectively. 
-Specifically, if the original output is short, then after training, the model outputs a fixed negative phrase akin to “I don’t know”, whereas for long outputs, the generated text remains essentially unchanged. 
-Hence, while this initial version performed relatively well on the 7B model, it was actually because it failed to effectively intervene on longer inputs, resulting in “artificially good” scores in specific scenarios but poor performance for smaller models.
+\subsection{Data Augmentation} 
+
+%我们发现这次比赛中无论哪个子任务的数据都存在输出长短差异巨大的文本。并且进一步实验后，我们还发现如果直接针对这些任务进行训练，模型往往难以同时兼顾长文本和段文本的效果。具体来说，如果原始输出是短文本，那么训练后的模型往往可以很好的遗忘相关知识，而对于长文本，则训练后的模型输出与原始输出近乎没有任何不同。
+We found that in this competition, the data across all sub-tasks contained texts with significantly varying lengths. Further experiments revealed that when training directly on these tasks, the model often struggles to balance the effectiveness of forgetting for both long and short texts. Specifically, if the original output is a short text, the trained model is able to effectively forget the relevant knowledge. However, for long texts, the output from the trained model shows almost no difference from the original output.
 
 %为解决上述问题，我们提出了一种针对长文本的重新切分策略。具体而言，对于长度较长的文本，我们先将其按照上下文语义边界或句子结构进行拆分，形成多段由短到长的子文本，再分别进行数据增强处理。图 1(b) 中详细展示了长文本切分的具体过程。与初始的统一替换方法相比，该切分策略能够更好地保留不同段落或句子间的语义一致性，提升对不同长度文本的适应性。
 To address this issue, we propose a segmentation strategy tailored for long texts. 
-Concretely, for lengthy outputs, we first split them according to punctuation, forming multiple segments from short to long. 
+Concretely, for long outputs, we first split them according to punctuation, forming multiple segments from short to long. 
 We then apply data augmentation to each segment accordingly. 
 Figure 1(right) presents a detailed illustration of the segmentation process for long texts. 
 Compared to the initial blanket replacement, this segmentation strategy better preserves semantic coherence across different paragraphs or sentences, thereby improving adaptability to diverse text lengths.
 
+
+
+
 \begin{table*}[!t]
+  \centering
+    \begin{tabular}{llll|llllll}
+    \hline
+    \multicolumn{4}{c}{\textbf{Model Component}} & \multicolumn{4}{c}{\textbf{Score}} \\ \hline
+         RD & NR & DA & GI & MIA & Task & MMLU & Final \\ \hline
+         × & O & × & × & 0.000 & 0.092 & 0.281 & 0.124 \\ \hline
+         × & O & O & × & 0.000 & 0.092 & 0.278 & 0.124 \\ \hline
+         O & O & × & × & 0.000 & 0.124 & 0.283 & 0.135 \\ \hline
+         O & O & O & × & 0.000 & 0.137 & 0.278 & 0.138 \\ \hline
+         × & × & × & O & 0.993 & 0.408 & 0.229 & 0.543 \\ \hline
+         × & × & O & O & 0.989 & 0.421 & 0.229 & 0.547 \\ \hline
+         O & × & × & O & 0.009 & 0.185 & 0.278 & 0.157 \\ \hline
+         O & O & × & O & 0.000 & 0.095 & 0.285 & 0.127 \\ \hline
+         O & × & O & O & 0.593 & 0.395 & 0.275 & 0.421 \\ \hline
+         O & O & O & O & 0.035 & 0.222 & 0.279 & 0.179 \\ \hline
+    \end{tabular}
+  \caption{
+    The usefulness of gradient contrast interference loss and Fine-tune Retain Data
+  }
+  \label{tab:AS2}
+\end{table*}
+
+
+
+
+
+\section{Experiment setup}
+%在本次任务中，我们基于 LoRA（Low-Rank Adaptation）方法对大型语言模型进行精调。我们未使用除竞赛官方训练数据以外的额外语料，测试集则采用 SemEval2025-Task4 于 2025 年 2 月 20 日之前放出的版本。所有离线实验均在配备 40GB 显存的单卡 A100 GPU 上完成，训练时长均不超过 1 小时。
+
+% lora_para = {
+%   'r': 8,
+%   'alpha': 32,
+%   'dropout': 0.05
+% }
+
+In this task, we employ a LoRA approach(\citet{hu2022lora}) to fine-tune a large language model, and the parameters are set as follows: $r=8$, $\alpha=32$, $dropout=0.05$.
+All experiments in this paper were conducted using the dataset provided by Semeval2025 Task4\citep{ramakrishna2025lumellmunlearningmultitask}, which was released during the competition. 
+All offline experiments are conducted on a single NVIDIA A100(40 GB) GPU, and each training session is completed within one hour. 
+
+The final evaluation score is computed as the average of three components:
+
+\begin{itemize}
+\item \noindent\textbf{Task Aggregate Score} This method is used to measure the model's completion of various tasks.
+
+\item \noindent\textbf{Membership Inference Attack (MIA)} This metric evaluates the extent to which the relevant knowledge is preserved or effectively forgotten.
+
+\item \noindent\textbf{MMLU Score} This serves as a measure of whether the model’s overall linguistic capability suffers any degradation after the unlearning process.
+\end{itemize}
+
+\section{Result}
+
+%Experiment setup只写表2中的内容
+
+%Result 5
+%句子1:table2展示了我们的系统在装配了不同组件下的效果。
+%句子2:其中NR、RF之类的分别指什么。
+%谁高谁低，谁是最好的，用一到两句话解释好坏的原因，为什么RD和GI要留下，为什么NR不能要
+%由于计算资源的限制，在比赛结束日前，我们拿到的最好结果是倒数第二行，因此我们提交了这个方案。
+%表1展示了我们使用的不同方法的组合对效果的影响。其中GI denotes Gradient Contrast Interference Loss, NR indicates that the original outputs for the forgotten data were replaced with negative responses, 其中 NR所使用的negative responses来自于\citep{tofu2024} , DA signifies the inclusion of data augmentation during training, RD表示对保留集的数据进行finetune, EP represents the number of epochs, and LR denotes the learning rate. 此外我们使用MIA, Task, MMLU, Final分别来指代MIA Score, Task Aggregate Score, MMLU Score以及三者取平均得到的最终得分。
+
+Table 1 illustrates the impact of different method combinations on performance. Here, GI denotes Gradient Contrast Interference Loss, NR indicates that the original outputs for the forgotten data were replaced with negative responses, where the negative responses used for NR are sourced from \citep{tofu2024}. DA signifies the inclusion of data augmentation during training, RD refers to fine-tuning the data in the retain set, EP represents the number of epochs, and LR denotes the learning rate. Additionally, we use MIA, Task, MMLU, and Final to refer to the MIA Score, Task Aggregate Score, MMLU Score, and the final score, which is the average of the three.
+
+%从表1中可以看出，在使用GCIL处理遗忘数据的同时加入数据增强和finetune retain data可以获得最高的效果，这是因为这么做可以同时兼顾不同类型任务以及不同类型的数据。而随着negative responses的加入，效果会随之下降，这可能是因为被遗忘数据同时受到两种损失的影响使得梯度难以始终沿着一个方向进行优化导致的。
+
+As shown in Table 1, the best performance is achieved when GCIL is applied to process forgotten data, combined with data augmentation and fine-tuning the retain data. This approach is effective because it simultaneously accommodates different task types and data types. However, the inclusion of negative responses results in a decline in performance. This may be due to the limited amount of forgotten data, where the simultaneous influence of two different loss functions causes the gradients to struggle to optimize consistently in a single effective direction.
+
+%由于计算资源的限制，在比赛结束日前，我们拿到的最好结果是表1中第8行的方案，因此我们提交了这个方案。
+
+Due to computational resource limitations, the best result we achieved before the competition deadline was from the eighth configuration in Table 1 (RD\&NR\&GA). As a result, we submitted this configuration.
+
+% Ablation Study
+%任务系统外，我们还对如下内容进行了消融实验
+%1.数据增强消融
+%2.参数敏感性
+%3.梯度干扰的结果
+%6.1数据增强，表4表达了不同的数据增强方案对最终效果的影响，一句话总结，不能要那个RF，为什么不能要。
+%6.2表xxx表达了不同的EP和LR对效果的影响
+%6.3表5梯度平方的影响，我们发现平方没有用
+%表3给我死，国内下午四点
+
+%表达了EP和LR对xxx对影响，一句话总结。
+%6.2
+
+%表2删掉EP和LR，上面加个配置
+\section{Ablation Study}
+%针对我们的系统，我们还对数据增强、参数敏感性、GCIL分别进行了消融实验并尝试了进一步扩展GCIL。全部的消融实验可以在附录A种查看。
+
+% \subsection{数据增强}
+\subsection{Data Augmentation} 
+
+\begin{table}[h]\footnotesize
+  \centering
+    \begin{tabular}{l|l|l|l|l}
+    \hline
+        ~ & MIA & Task & MMLU & Final \\ \hline
+        RF & 0.00 & 0.09 & 0.28 & 0.12 \\ \hline
+        RF\&RD & 0.00 & 0.12 & 0.28 & 0.14 \\ \hline
+        GI & 0.99 & 0.41 & 0.23 & 0.54 \\ \hline
+        GI\&RD & 0.01 & 0.19 & 0.28 & 0.16 \\ \hline
+        GI\&RD\&GA & 0.59 & 0.39 & 0.28 & 0.42 \\ \hline
+        RF\&GI\&RD\&GA & 0.02 & 0.23 & 0.28 & 0.18 \\ \hline
+    \end{tabular}
+  \caption{The effects of each part of the new system.}
+  \label{tab:accents}
+\end{table}
+%通过表2的对比可以看出，随着数据增强的加入，系统的unlearn能力进一步提高，通过针对样本输出结果的分析，可以发现在加入数据扩充前，在遇到需要遗忘的知识是长回复是，几乎不存在变化，而在加入数据增强之后，这类样本可以被有效的解决。
+The comparison in Table 2 shows that the incorporation of data augmentation further improves the system's unlearning capabilities. Additionally, the MMLU results demonstrate that the model’s linguistic abilities remain largely unaffected. An analysis of the model's output reveals that, prior to data augmentation, there was virtually no change when dealing with long responses that required forgetting. However, after the inclusion of data augmentation, such samples were effectively handled, resulting in significant improvements in the unlearning process.
+
+
+\begin{table*}[t]
   \centering
     \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|}
     \hline
@@ -291,142 +400,21 @@ Compared to the initial blanket replacement, this segmentation strategy better p
 \end{table*}
 
 
-\begin{table*}[!t]
-  \centering
-    \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|}
-    \hline
-        EP & LR & RD & NR & DA & GI & MIA Score & Task Aggregate & MMLU & Final Score \\ \hline
-        5 & 1.00E-04 & × & O & × & × & 0.000 & 0.092 & 0.281 & 0.124 \\ \hline
-        5 & 1.00E-04 & × & O & O & × & ~ & ~ & ~ & ~ \\ \hline
-        5 & 1.00E-04 & O & O & × & × & 0.000 & 0.124 & 0.283 & 0.135 \\ \hline
-        5 & 1.00E-04 & O & O & O & × & ~ & ~ & ~ & ~ \\ \hline
-        5 & 1.00E-04 & × & × & × & O & 0.993 & 0.408 & 0.229 & 0.543 \\ \hline
-        5 & 1.00E-04 & × & × & O & O & 0.989 & 0.421 & 0.229 & 0.547 \\ \hline
-        5 & 1.00E-04 & O & × & × & O & 0.009 & 0.185 & 0.278 & 0.157 \\ \hline
-        5 & 1.00E-04 & O & × & O & O & 0.593 & 0.395 & 0.275 & 0.421 \\ \hline
-    \end{tabular}
-  \caption{
-    The usefulness of Gradient Interference and Fine-tune Retain Data
-  }
-  \label{tab:AS2}
-\end{table*}
-
-
-\subsection{Multi-Task Learning Module}
-%本任务要求模型在遗忘集（需遗忘或篡改信息）和保留集（需保持正确信息）之间达到平衡，兼顾“有效遗忘”与“信息保留”。通过对比分析遗忘集与保留集的文本，我们发现两者在词汇、主题等方面高度相似，但在预测目标上截然不同。为此，我们采用了多任务学习（Multi-Task Learning, MTL）的范式，将二者统一在一个模型框架中进行训练。因此，我们定义了两项子任务：
-
-This task demands a balance between the forget set (where information must be erased or distorted) and the retain set (where the original knowledge must be preserved), thus requiring both “effective forgetting” and “information retention.” 
-Through comparative analyses of the forget and retain sets, we found that they overlap significantly in terms of vocabulary and topics, yet require starkly different predictive objectives. 
-Consequently, we adopt a Multi-Task Learning (MTL) paradigm that unifies both sets within a single model framework. We define two sub-tasks:
-
-%保留集任务
-%使用标准的语言建模损失（next-token prediction）L_ntp来保证模型能够对保留集中内容进行准确的生成。即，对于任意保留集样本(x_input,y_output)，损失函数可以抽象表示为:
-%L_retain = L_ntp(x_input,y_output)
-
-\noindent\textbf{Retain-Set Task}  We use the standard language modeling loss (next-token prediction), $L_{ntp}$, to ensure that the model accurately generates content from the retain set. Formally, for any sample $(x_{input},y_{output})$ in the retain set, the loss can be summarized as:
-\begin{equation}
-L_{reatin}=L_{ntp}(x_{input},y_{output})
-\end{equation}
-
-%遗忘集任务
-%为实现对遗忘集信息的“反向”调整，我们设计了一种受梯度上升（Gradient Ascent）思想启发的“梯度干扰”损失：
-%L=a*(1/L_ntp(x_input,y_output))
-%其中L_ntp(x_input,y_output)表示模型以遗忘集原始输出y_output作为下一个词预测目标时得到的语言建模损失，为缩放因子用于控制损失量级。与直接采用梯度上升不同，我们使用L_ntp的倒数关系，使得当模型对遗忘集产生与原始输出高度相似的结果时，损失会变得极大，从而诱导梯度进行显著调整；而当生成结果与原始输出差别较大时，损失会迅速减小，避免模型出现失控或无法收敛的情况。为了保证两种损失不产生互相干扰，我们在产生每个训练batch时，batch内只包含一种损失的数据。
-\noindent\textbf{Retain-Set Task} 
-To achieve a “reversal” or removal of knowledge in the forget set, we propose a “gradient interference” loss inspired by the idea of Gradient Ascent:
-\begin{equation}
-L_{forget}=\alpha  \times  \frac{1}{L_{ntp}(x_{input},y_{output})}
-\end{equation}
-
-where $L_{ntp}(x_{input},y_{output})$ denotes the language modeling loss when the model uses the original output $y_{output}$ of the forget set as the prediction target, and $\alpha$ is a scaling factor that regulates the magnitude of the loss. Unlike directly performing gradient ascent, we apply an inverse relationship of $L_{ntp}$. When the model’s predictions closely resemble the original output in the forget set, the loss becomes very large, inducing substantial gradient adjustments; conversely, when the model generates outputs that deviate significantly from the original forgotten text, the loss rapidly diminishes, preventing the model from diverging or failing to converge. To ensure these two losses do not interfere with each other, we only include one type of loss data per training batch.
-
-\section{Experiment setup}
-%论文中的所有实验所使用的数据均为 (ramakrishna2025lumellmunlearningmultitask)在比赛进行时公开的数据，所有测试结果均为当时公开的validation部分。排行榜中的结果所使用的参数为epoch=3, learning rate=1e-4, 所使用的相关技术为negative responses(\citet{choi2024snap};\citet{shi2024ulmr}), 梯度干扰，并对保留数据进行SFT。最终结果评估为三部分的平均值，第一部分为评估任务完成情况的应保留数据与应遗忘数据的复述率(rouge-L),第二部分为评估相关知识保留情况的Membership Inference Attack (MIA)，第三部分为用于评估模型语言能力是否受损的MMLU得分。
-All experiments in this paper were conducted using the dataset provided by Semeval2025 Task4(\citep{ramakrishna2025lumellmunlearningmultitask}), which was released during the competition. The reported results are based on the validation split that was publicly available at that time. For the leaderboard outcomes, we set the number of training epochs to 3 and the learning rate to 
-1e-4.The relevant techniques utilized include negative responses \citep{choi2024snap, shi2024ulmr}, gradient interference, and supervised fine-tuning (SFT) on the retained data.
-The final evaluation score is computed as the average of three components:
-
-\noindent\textbf{Task Aggregate Score} This method is used to measure the model's completion of various tasks.
-
-\noindent\textbf{Membership Inference Attack (MIA)} This metric evaluates the extent to which the relevant knowledge is preserved or effectively forgotten.
-
-\noindent\textbf{MMLU Score} This serves as a measure of whether the model’s overall linguistic capability suffers any degradation after the unlearning process.
-\section{Result}
-
-
-
-\subsection{Main Result}
-% 我们在竞赛中提交的方法的在7B模型中排名5，在1B模型中排名19。实际上当我们发现我们的方法在两类模型上存在巨大效果差异时我们就意识到这个方法可能存在某种问题。通过进一步分析，我们发现我们的方法对于模型规模非常敏感，但是我们还发现我们原来的方法实际上对于模型输出文本的长短也非常的敏感，就像前文所述，当原始输出较短时，训练后的模型会输出类似于I don't know的文本，而对于原始输出较长的文本则几乎没有任何变化，详细示例可以从附录2中查看。
-
-%主要发现
-
-Our submitted method ranked fifth in the 7B model track and nineteenth in the 1B model track. Upon observing this substantial performance discrepancy between models of different scales, we recognized a potential issue in our approach. Further analysis revealed that our method is highly sensitive to model size. Moreover, we found that it is also sensitive to the length of the model’s original response: as noted earlier, when the original responses were relatively short, the trained model tended to produce answers such as “I don’t know”, whereas for longer original outputs, it exhibited almost no change. This behavior is the primary cause of the method’s overall ineffectiveness (see Appendix B for detailed examples).
-
-%因此我们如第三章所描述的一样修改了整个系统，并进行了全面的消融实验，消融实验的所有结果被放在附录A中，在我们的代码仓库中可以进一步看到每一条样本的推理结果。
-Consequently, we revised our entire system as described in Section 3 and conducted an extensive ablation study. All results from the ablation experiments are provided in Appendix A, and the corresponding code repository includes full inference logs for each sample.
-\subsection{Ablation Study}
-
-% 由于我们进行了许多的消融实验，因此我们将所有结果统一在附录A中呈现，在正文中仅展示用于得出相关结论的结果。结果表格中的GI表示梯度干扰，NR表示被遗忘数据的原始输出被替换为负向回应，DA表示训练流程中加入了数据增强，EP表示epoch，lr表示学习率。
-For clarity, we have consolidated the results from all ablation experiments in Appendix A, presenting only the findings in the main text that inform our relevant conclusions. In the tables, GI denotes gradient interference, NR indicates that the original outputs for the forgotten data were replaced with negative responses, DA signifies the inclusion of data augmentation during training, EP represents the number of epochs, and LR denotes the learning rate. 
-In Table 3, the parameters for the “Old System” are set to 3 epochs and a learning rate of 1e-4. 
-Meanwhile, both the "New System" configuration in Table 3 and all results shown in Tables 4 and 5 utilize 5 epochs and the same learning rate of 1e-4.
-
-
-
-
 % \subsection{参数敏感性}
-\subsubsection{Parameter Sensitivity}  
+\subsection{Parameter Sensitivity}  
 
 %表1显示了在不同参数下，我们的新方法与提交的方法的结果，可以明显看出，两种方法都对于参数非常的敏感，会随着训练的加长效果不断变好。
-Table 1 presents the results of our new method under various parameter configurations. It is evident that the method is highly sensitive to these parameters and exhibits progressively improved performance as the training period is extended.
-
-% \subsection{原方案的问题}
-\subsubsection{Old Stsyem Vs New System} 
-%表3显示了我们竞赛时所有使用的方法及参数与我们新方法的最有结果的比较，可以看出，我们新方法的性能远超旧方法，并且从MMLU的结果上可以发现不会为模型带来过大的语言能力的损害。此外，在附录A中的结果可以看到，旧方法近乎不会随着参数改变而改变，因此我们新设计的这套方法在unlearn领域中有着更好的表现。
-Table 3 compares the methods and parameters that we used during the competition with the best results obtained by our new approach. The data indicate that the new method substantially outperforms the old one and, based on the MMLU results, does so without causing a significant degradation in the overall linguistic capabilities of the model. Furthermore, as shown in Appendix A, the old method remains nearly unaffected by changes in hyperparameters, underscoring the superior performance and adaptability of our newly designed unlearning framework.
-\begin{table}[h]
-  \centering
-    \begin{tabular}{l|l|l|l|l}
-    \hline
-         & MIA & Task & MMLU & Final \\ \hline
-        Old System & 0 & 0.1 & 0.28 & 0.12 \\ \hline
-        New System & 0.59 & 0.39 & 0.26 & 0.42 \\ \hline
-    \end{tabular}
-  \caption{Old Stsyem VS New System.}
-  \label{tab:accents}
-\end{table}
-
+Table 3 illustrates the variations in the performance of our method under different parameters. Due to computational resource limitations, we were only able to test results up to a maximum of 5 epochs. However, it is evident that as the number of epochs increases, there is still room for improvement in our method.
 
 
 % \subsection{梯度干扰及使用原文}
-\subsubsection{Gradient Interference \& Fine-tune Retain Data} 
+\subsection{Gradient Contrast Interference Loss \& Fine-tune Retain Data} 
+
+Table 2 indicates that fine-tuning the retain data is essential, regardless of whether gradient interference or negative response replacement is used. A comparison of the outputs before and after fine-tuning the retain data reveals that omitting this step results in the model becoming uncontrollable, leading to the repeated generation of the same words. This issue is also reflected in the MMLU scores, which experience a significant decline when the retain data is excluded, indicating a severe deterioration in the model's language abilities. Furthermore, the results related to gradient interference and negative response replacement show that incorporating gradient interference significantly enhances the forgetting effect while maintaining the model's linguistic capabilities. However, the introduction of negative response replacement leads to an overall decrease in performance, likely due to the limited amount of forgotten data, which makes it difficult to support both optimization objectives simultaneously. Additionally, Table 4 demonstrates that the use of GCIL is more effective than negative response replacement.
 
 
-%表4显示了对于梯度干扰来说，原文是必不可少的，通过查看两种方法的文本输出，我们发现当仅使用梯度干扰不加入原文时，模型会变得不再可控，开始不断输出重复的单词，从MMLU的变化也可以发现此时模型的语言能力收到了极大的破坏。此外，通过对比梯度干扰和负向替换可以发现，加入梯度干扰后会使得模型在保留语言能力的同时遗忘知识，我们还可以发现负向替换的引入会使得模型整体性能下降，这与【Alternate Preference Optimization for Unlearning Factual Knowledge in LLMs 】的结论是一致的。
-Table 4 indicates that fine-tune retain data is indispensable, regardless of whether gradient interference or negative response replacement is employed. By examining the outputs of both methods, we find that omitting fine-tune retain data causes the model to become uncontrollable, leading it to repeatedly generate the same words. This issue is also reflected in the MMLU scores, which decrease substantially when the data retention is excluded, suggesting a severe deterioration in the model's language ability. In addition, a comparison between gradient interference and negative response replacement shows that incorporating gradient interference significantly improves the forgetting effect while preserving the model’s linguistic capacity; however, introducing negative replacement leads to an overall decline in performance.
-\begin{table}[h]\footnotesize
-  \centering
-    \begin{tabular}{l|l|l|l|l}
-    \hline
-        ~ & MIA & Task & MMLU & Final \\ \hline
-        RF & 0.00 & 0.09 & 0.28 & 0.12 \\ \hline
-        RF\&RD & 0.00 & 0.12 & 0.28 & 0.14 \\ \hline
-        GI & 0.99 & 0.41 & 0.23 & 0.54 \\ \hline
-        GI\&RD & 0.01 & 0.19 & 0.28 & 0.16 \\ \hline
-        GI\&RD\&GA & 0.59 & 0.39 & 0.28 & 0.42 \\ \hline
-        RF\&GI\&RD\&GA & 0.02 & 0.23 & 0.28 & 0.18 \\ \hline
-    \end{tabular}
-  \caption{The effects of each part of the new system.}
-  \label{tab:accents}
-\end{table}
-
-% \subsection{数据增强}
-\subsubsection{Data Augmentation} 
-%同样通过表4的对比还可以看出，随着数据增强的加入，系统的unlearn能力进一步提高，通过针对样本输出结果的分析，可以发现在加入数据扩充前，在遇到需要遗忘的知识是长回复是，几乎不存在变化，而在加入数据增强之后，这类样本可以被有效的解决。
-Furthermore, Table 4 shows that incorporating data augmentation further enhances the system’s unlearning capabilities. An analysis of the model’s outputs reveals that, prior to data augmentation, there was virtually no change when encountering long responses that required forgetting. However, once data augmentation was employed, the method effectively addressed such cases, leading to marked improvements in unlearning performance.
-
-\subsubsection{Amplify Gradient Interference} 
-To further examine the impact of our gradient interference approach, we squared its gradient signals to produce more extreme upper and lower bounds for the loss variation. However, as demonstrated in Table 5, this intensification did not yield any noticeable performance improvement.
+\subsubsection{Amplify GCIL} 
+To further examine the impact of our GCIL approach, we squared its gradient signals to produce more extreme upper and lower bounds for the loss variation. However, as demonstrated in Table 4, this intensification did not yield any noticeable performance improvement.
 
 \begin{table}[h]\footnotesize
   \centering
@@ -484,8 +472,5 @@ To further examine the impact of our gradient interference approach, we squared 
 \label{sec:appendixA}
 This is an appendix.
 
-\section{Appendix: Ablation Study}
-\label{sec:appendixB}
-This is an appendix.
 
 \end{document}
