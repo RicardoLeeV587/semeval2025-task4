@@ -383,6 +383,8 @@ Table 3 illustrates the variations in the performance of our method under differ
 % \subsection{梯度干扰及使用原文}
 \subsection{Gradient Contrast Interference Loss \& Fine-tune Retain Data} 
 
+%表2表明，无论采用哪种方法，微调保留数据都是必不可少的。通过对比微调保留数据前后的输出，我们发现省略微调保留数据会导致模型变得不可控，导致其重复生成相同的单词。这个问题也反映在 MMLU 分数上，当不使用保留数据时，MMLU 分数大幅下降，表明模型的语言能力严重恶化。此外，梯度干扰和负响应替换相关的结果表明，加入梯度干扰显着改善了遗忘效果，同时保留了模型的语言能力；然而，引入负替代会导致性能整体下降，这是由于被遗忘的数据数据量较小，难以同时支撑两个优化目标的引入。并且表4还表明了使用GCIL会比negative response replacement更加有效。 
+
 Table 2 indicates that fine-tuning the retain data is essential, regardless of whether gradient interference or negative response replacement is used. A comparison of the outputs before and after fine-tuning the retain data reveals that omitting this step results in the model becoming uncontrollable, leading to the repeated generation of the same words. This issue is also reflected in the MMLU scores, which experience a significant decline when the retain data is excluded, indicating a severe deterioration in the model's language abilities. Furthermore, the results related to gradient interference and negative response replacement show that incorporating gradient interference significantly enhances the forgetting effect while maintaining the model's linguistic capabilities. However, the introduction of negative response replacement leads to an overall decrease in performance, likely due to the limited amount of forgotten data, which makes it difficult to support both optimization objectives simultaneously. Additionally, Table 4 demonstrates that the use of GCIL is more effective than negative response replacement.
 
 
