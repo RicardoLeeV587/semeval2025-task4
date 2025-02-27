@@ -357,8 +357,8 @@ Due to computational resource limitations, the best result we achieved before th
 \section{Ablation Study}
 %针对我们的系统，我们还对数据增强、参数敏感性、GCIL分别进行了消融实验并尝试了进一步扩展GCIL。全部的消融实验可以在附录A种查看。
 
-% \subsection{数据增强}
-\subsection{Data Augmentation} 
+% \subsection{梯度干扰及使用原文}
+\subsection{Gradient Contrast Interference Loss \& Fine-tune Retain Data} 
 
 \begin{table}[h]\footnotesize
   \centering
@@ -375,9 +375,6 @@ Due to computational resource limitations, the best result we achieved before th
   \caption{The effects of each part of the new system.}
   \label{tab:accents}
 \end{table}
-%通过表2的对比可以看出，随着数据增强的加入，系统的unlearn能力进一步提高，通过针对样本输出结果的分析，可以发现在加入数据扩充前，在遇到需要遗忘的知识是长回复是，几乎不存在变化，而在加入数据增强之后，这类样本可以被有效的解决。
-The comparison in Table 2 shows that the incorporation of data augmentation further improves the system's unlearning capabilities. Additionally, the MMLU results demonstrate that the model’s linguistic abilities remain largely unaffected. An analysis of the model's output reveals that, prior to data augmentation, there was virtually no change when dealing with long responses that required forgetting. However, after the inclusion of data augmentation, such samples were effectively handled, resulting in significant improvements in the unlearning process.
-
 
 \begin{table*}[t]
   \centering
@@ -399,6 +396,19 @@ The comparison in Table 2 shows that the incorporation of data augmentation furt
 \label{tab:AS1}
 \end{table*}
 
+%表2表明，无论采用哪种方法，微调保留数据都是必不可少的。通过对比微调保留数据前后的输出，我们发现省略微调保留数据会导致模型变得不可控，导致其重复生成相同的单词。这个问题也反映在 MMLU 分数上，当不使用保留数据时，MMLU 分数大幅下降，表明模型的语言能力严重恶化。此外，梯度干扰和负响应替换相关的结果表明，加入梯度干扰显着改善了遗忘效果，同时保留了模型的语言能力；然而，引入负替代会导致性能整体下降，这是由于被遗忘的数据数据量较小，难以同时支撑两个优化目标的引入。并且表4还表明了使用GCIL会比negative response replacement更加有效。 
+
+Table 2 indicates that fine-tuning the retain data is essential, regardless of whether gradient interference or negative response replacement is used. A comparison of the outputs before and after fine-tuning the retain data reveals that omitting this step results in the model becoming uncontrollable, leading to the repeated generation of the same words. This issue is also reflected in the MMLU scores, which experience a significant decline when the retain data is excluded, indicating a severe deterioration in the model's language abilities. Furthermore, the results related to gradient interference and negative response replacement show that incorporating gradient interference significantly enhances the forgetting effect while maintaining the model's linguistic capabilities. However, the introduction of negative response replacement leads to an overall decrease in performance, likely due to the limited amount of forgotten data, which makes it difficult to support both optimization objectives simultaneously. Additionally, Table 2 demonstrates that the use of GCIL is more effective than negative response replacement.
+
+% \subsection{数据增强}
+\subsection{Data Augmentation} 
+
+%通过表2的对比可以看出，随着数据增强的加入，系统的unlearn能力进一步提高，通过针对样本输出结果的分析，可以发现在加入数据扩充前，在遇到需要遗忘的知识是长回复是，几乎不存在变化，而在加入数据增强之后，这类样本可以被有效的解决。
+The comparison in Table 2 shows that the incorporation of data augmentation further improves the system's unlearning capabilities. Additionally, the MMLU results demonstrate that the model’s linguistic abilities remain largely unaffected. An analysis of the model's output reveals that, prior to data augmentation, there was virtually no change when dealing with long responses that required forgetting. However, after the inclusion of data augmentation, such samples were effectively handled, resulting in significant improvements in the unlearning process.
+
+
+
+
 
 % \subsection{参数敏感性}
 \subsection{Parameter Sensitivity}  
@@ -407,13 +417,10 @@ The comparison in Table 2 shows that the incorporation of data augmentation furt
 Table 3 illustrates the variations in the performance of our method under different parameters. Due to computational resource limitations, we were only able to test results up to a maximum of 5 epochs. However, it is evident that as the number of epochs increases, there is still room for improvement in our method.
 
 
-% \subsection{梯度干扰及使用原文}
-\subsection{Gradient Contrast Interference Loss \& Fine-tune Retain Data} 
-
-Table 2 indicates that fine-tuning the retain data is essential, regardless of whether gradient interference or negative response replacement is used. A comparison of the outputs before and after fine-tuning the retain data reveals that omitting this step results in the model becoming uncontrollable, leading to the repeated generation of the same words. This issue is also reflected in the MMLU scores, which experience a significant decline when the retain data is excluded, indicating a severe deterioration in the model's language abilities. Furthermore, the results related to gradient interference and negative response replacement show that incorporating gradient interference significantly enhances the forgetting effect while maintaining the model's linguistic capabilities. However, the introduction of negative response replacement leads to an overall decrease in performance, likely due to the limited amount of forgotten data, which makes it difficult to support both optimization objectives simultaneously. Additionally, Table 4 demonstrates that the use of GCIL is more effective than negative response replacement.
 
 
-\subsubsection{Amplify GCIL} 
+
+\subsection{Amplify GCIL} 
 To further examine the impact of our GCIL approach, we squared its gradient signals to produce more extreme upper and lower bounds for the loss variation. However, as demonstrated in Table 4, this intensification did not yield any noticeable performance improvement.
 
 \begin{table}[h]\footnotesize
