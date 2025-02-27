@@ -120,7 +120,7 @@ This paper presents our solution for SemEval-2025 Task 4, introducing a supervis
 \end{abstract}
 
 \section{Introduction}
-
+\iffalse
 %大语言模型（LLMs）在自然语言理解和生成方面表现出了卓越的性能。然而，由于它们是基于大量数据进行训练的，它们可能会无意中保留并重复敏感信息，从而引发关于隐私和合规性的严重担忧。SemEval-2025任务4：“从大语言模型中遗忘敏感内容”旨在旨在通过开发一个全面的评估挑战来弥补缺乏强大的评估框架来评估这些反学习策略的准确性的问题。对于确保伦理的AI部署并符合隐私法规至关重要。该任务以英语进行，评估将考虑任务特定的重复率、成员推断攻击（MIA）得分和MMLU基准性能，以衡量模型在遗忘指定内容的同时，保持其更广泛的语言和推理能力的有效性。
 
 %八股文
@@ -156,15 +156,42 @@ Furthermore, through ablation studies, we thoroughly examined the role of the lo
 Our research provides new insights into privacy protection for large language models, proposing a simple and user-friendly method for selective forgetting and offering experimental evidence for the future development of machine unlearning techniques. 
 Detailed code and experimental records are available at the following link: https://github.com/yizhiai1994/CCM\_at\_semeval\\2025task4.
 
-\section{Background}
-%每个工作不要超过两行半
-%最好基于前序经验，解决什么工作。
+\fi
+
+% 大型语言模型（LLMs）在各种自然语言任务中取得了巨大成功，但它会记住训练集中的敏感信息。因此不法分子可以通过特殊手段恢复出训练语料的敏感信息，从而带来隐私曝光，版权泄露等潜在风险。机器遗忘（Machine Unlearning）正是为了解决这一问题而新兴的研究领域。其核心挑战包括（1）。 在遗忘的同时依然保留不该遗忘的重要信息与能力（2）不同数据类型的适应性（3）计算成本与效率。 
+
+Large Language Models (LLMs) have achieved remarkable success across various natural language tasks. However, LLMs tend to memorize sensitive information from their training data, posing potential risks such as privacy breaches and copyright violations \cite{wang2024machine}. Malicious actors can exploit this vulnerability to extract confidential content, leading to unintended exposure. Machine Unlearning has emerged as a research field to address this issue, focusing on the following core challenges\cite{qu2023learn, li2025machine}:(1) Preserving essential information and capabilities while ensuring the removal of targeted data. (2) Adapting to different data types. (3) Balancing computational cost and efficiency.
+
+% SemEVAL2025 Task 4 提出了“Unlearning sensitive content from Large Language Models” 挑战。其目的在于提出一个健全的benchmark来衡量LLM遗忘策略的有效性。其包含三类数据：长篇创意文档，简短个人信息，公开人物传记。每类数据都有预先划定的“遗忘集”（Forget set）和“保留集”（Retain set）。其不仅评估遗忘的效果，还会在MMLU Benchmark上评估通用能力的损失。此外，为了鼓励大家平衡计算成本与最终效果，该比赛的评估还会限制提交方案的运行时间。
+
+SemEval-2025 Task 4 introduced the challenge "Unlearning Sensitive Content from Large Language Models," aiming to establish a robust benchmark for evaluating the effectiveness of unlearning strategies in LLMs \cite{ramakrishna2025lumellmunlearningmultitask}. The task encompasses three data categories: long-form synthetic creative documents with different genres, short form synthetic biographies containing personal information, and real documents sampled from the target model’s training dataset. Each dataset includes predefined "Forget" and "Retain" sets, and encompasses two evaluation tasks: sentence completion and question-answering. The evaluation not only assesses the success of unlearning but also measures the impact on general capabilities using the MMLU Benchmark. To encourage a balance between computational efficiency and performance, the organizers also impose runtime constraints on submitted solutions.
+
+% 在本次比赛中，我们提出一种方案：Gradient Contrastive Interference Learning (GCIL). 通过扰动模型对于被遗忘数据的梯度来达到遗忘相关知识的作用。同时为了进一步确保遗忘的可控性，我们将其同标准SFT流程融合成了一个多任务学习目标，并且尝试了各种数据处理与增强方案。
+
+In this competition, we propose Gradient Contrastive Interference Learning (GCIL). This aims to erase knowledge related to the data to be forgotten by perturbing the model's gradients during training. We integrate this technique with the standard Supervised Fine-Tuning (SFT) process into a multi-task learning paradigm to ensure controllable unlearning. Additionally, various data processing and augmentation strategies \cite{choi2024snap, shi2024ulmr} are explored to see their impact on the final performance.
+
+% 我们的贡献如下：
+% 1. 我们提出了GCIL。该技术通过比对当前输出与需要被遗忘的信息的相似性来控制损失的大小，从而实现针对模型可控的遗忘。同时我们还利用多任务学习的方案，让模型在不该遗忘的数据同步进行SFT。
+% 2. 我们详细的探索了我们的方案在不同配置，不同数据处理的条件下的效果。这为后续研究提供了可靠的参考依据
+% 3. 我们的方案在最终榜单上排名第5，充分证明了方案的有效性。
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=1.5\columnwidth]{论文图.png} 
   \caption{A minimal working example to demonstrate how to place two images side-by-side.}
   \label{fig:overview}
 \end{figure*}
+
+Our contributions are as follows:
+\begin{itemize}
+	\item \textbf{Introduction of GCIL}: This technique regulates the loss magnitude by comparing the current output with the information to be forgotten, enabling controlled unlearning within the model. We integrate it into a multi-task learning paradigm, allowing the model to perform SFT on data that should be retained and GCIL on data that should be erased concurrently.
+	\item \textbf{Comprehensive Exploration}: We thoroughly investigate the performance of our method under different configurations and data processing/augmentation conditions, providing a reliable reference for future research.
+	\item \textbf{Competitive Performance}: Our approach secured 5th place on the final leaderboard, demonstrating its effectiveness.
+\end{itemize}
+
+
+\section{Background}
+%每个工作不要超过两行半
+%最好基于前序经验，解决什么工作。
 
 %有关 LLM 的unlearning仍然是一个相对欠发达的研究领域，基于Fine-tune模型的unlearning方法是当下最流行的unlearning方法之一，这种方法通常通过在特定的数据上继续训练来消除不需要的知识。
 Research on knowledge unlearning in large language models (LLMs) is an emerging field, with fine-tuning-based unlearning being one of the most common method. This involves retraining the model on datasets containing specific target knowledge to weaken its memory of the unwanted information.
