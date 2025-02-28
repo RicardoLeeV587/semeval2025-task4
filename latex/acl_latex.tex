@@ -12,6 +12,9 @@
 \usepackage{times}
 \usepackage{latexsym}
 \usepackage{longtable}
+\usepackage{placeins}
+
+\usepackage{needspace}
 % For proper rendering and hyphenation of words containing Latin characters (including in bib files)
 \usepackage[T1]{fontenc}
 % For Vietnamese characters
@@ -534,16 +537,17 @@ To further examine the impact of our GCIL approach, we squared its gradient sign
 
 \bibliography{custom}
 
-
+\newpage
 \appendix
-
-\section{Appendix: Ablation Study}
+\onecolumn
+\section{Appendix: Ablation Study}\nopagebreak[4]
+% \Large\textbf{Appendix: Ablation Study}
+% \nopagebreak
 \label{sec:appendixA}
 
-\onecolumn
-\begin{longtable}[h]{|r|r|l|l|l|l|l|r|r|l|r|}
-\caption{Ablation Study Result} \label{tab:longtable} \\
 
+\begin{longtable}[h]{|r|r|l|l|l|l|l|r|r|l|r|}
+\caption{Ablation Study Results} \\
 % First page header
 \hline
 \multicolumn{1}{|c|}{\textbf{EP}} & \multicolumn{1}{c|}{\textbf{LR}} & \multicolumn{1}{c|}{\textbf{RD}} & \multicolumn{1}{c|}{\textbf{NR}} & \multicolumn{1}{c|}{\textbf{DA}} & \multicolumn{1}{c|}{\textbf{GI}} & \multicolumn{1}{c|}{\textbf{GI2}} & \multicolumn{1}{c|}{\textbf{MIA}} & \multicolumn{1}{c|}{\textbf{TAS}} & \multicolumn{1}{c|}{\textbf{MMLU}} & \multicolumn{1}{c|}{\textbf{Final}} \\ 
@@ -694,6 +698,9 @@ To further examine the impact of our GCIL approach, we squared its gradient sign
 5                                 & 1.00E-06                         & ×                                & ×                                & O                                & O                                & ×                                 & 0.092                             & 0.277                             & 0.000                              & 0.123                               \\ \hline
 5                                 & 1.00E-06                         & ×                                & ×                                & O                                & ×                                & O                                 & 0.092                             & 0.276                             & 0.000                              & 0.122                               \\ \hline
 5                                 & 1.00E-06                         & ×                                & ×                                & ×                                & O                                & ×                                 & 0.092                             & 0.275                             & 0.000                              & 0.122                               \\ \hline
+
+
+
 \end{longtable}
 
 \end{document}
