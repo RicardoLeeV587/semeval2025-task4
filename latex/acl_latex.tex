@@ -168,7 +168,7 @@ SemEval-2025 Task 4 introduced the challenge "Unlearning Sensitive Content from 
 
 % 在本次比赛中，我们提出一种方案：Gradient Contrastive Interference Learning (GCIL). 通过扰动模型对于被遗忘数据的梯度来达到遗忘相关知识的作用。同时为了进一步确保遗忘的可控性，我们将其同标准SFT流程融合成了一个多任务学习目标，并且尝试了各种数据处理与增强方案。
 
-In this competition, we propose Gradient Contrastive Interference Learning (GCIL). This aims to erase knowledge related to the data to be forgotten by perturbing the model's gradients during training. We integrate this technique with the standard Supervised Fine-Tuning (SFT) process into a multi-task learning paradigm to ensure controllable unlearning. Additionally, various data processing and augmentation strategies \cite{choi2024snap, shi2024ulmr} are explored to see their impact on the final performance.
+In this competition, we propose Gradient Contrastive Interference Loss (GCIL). This aims to erase knowledge related to the data to be forgotten by perturbing the model's gradients during training. We integrate this technique with the standard Supervised Fine-Tuning (SFT) process into a multi-task learning paradigm to ensure controllable unlearning. Additionally, various data processing and augmentation strategies \cite{choi2024snap, shi2024ulmr} are explored to see their impact on the final performance.
 
 % 我们的贡献如下：
 % 1. 我们提出了GCIL。该技术通过比对当前输出与需要被遗忘的信息的相似性来控制损失的大小，从而实现针对模型可控的遗忘。同时我们还利用多任务学习的方案，让模型在不该遗忘的数据同步进行SFT。
@@ -208,11 +208,16 @@ In response, we propose a more pragmatic approach to unlearning in LLMs that com
 \section{System Overview}
 
 %在这次比赛中，我们着重探索了基于梯度上升思想的fine-tune方案，并进一步提出了更加可控的gradient contrast interference loss (GCIL) 以及用于支撑GCIL生效的配套数据增强方案和多任务学习框架。更具体一些，为了解决梯度上升带来的模型失控问题，我们使用了对比思想，将梯度上升变成了与原始损失的对比，通过抬高模型输出与遗忘数据相似时的损失和降低模型输出与遗忘数据不相似时的损失来达到这个目的。同时为了确保原有的知识不被遗忘，我们还引入了对原始数据进行finetune来保留对应知识。
-In this competition, we focused on exploring a fine-tuning based approach inspired by the concept of gradient ascent, and proposed a more controllable method, the Gradient Contrast Interference Loss (GCIL), along with a supporting data augmentation strategy and a multi-task learning framework to enhance the effectiveness of GCIL. Specifically, to address the issue of model instability caused by gradient ascent, we applied a contrastive approach by transforming gradient ascent into a contrast with the original loss function. This was achieved by increasing the loss when the model’s output is similar to the forgotten data and decreasing the loss when the model's output is dissimilar to the forgotten data. Additionally, to ensure that the model retains existing knowledge, we incorporated fine-tuning on the retain data to preserve the relevant knowledge.
+% In this competition, we explore a fine-tuning based approach inspired by the concept of gradient ascent, and proposed a more controllable method, the Gradient Contrast Interference Loss (GCIL), along with a supporting data augmentation strategy and a multi-task learning framework to enhance the effectiveness of GCIL. 
+% Specifically, to address the issue of model instability caused by gradient ascent, we applied a contrastive approach by transforming gradient ascent into a contrast with the original loss function. This was achieved by increasing the loss when the model’s output is similar to the forgotten data and decreasing the loss when the model's output is dissimilar to the forgotten data. Additionally, to ensure that the model retains existing knowledge, we incorporated fine-tuning on the retain data to preserve the relevant knowledge.
+
+In this competition, we propose the Gradient Contrastive Interference Loss (GCIL), which, combined with traditional Supervised Fine-Tuning (SFT), forms a multi-task learning framework. Meanwhile, we observed a significant performance discrepancy between long and short outputs. To mitigate this issue, we incorporated data augmentation. The overall workflow is illustrated in Figure~\ref{fig:overview}.
+
+Section~\ref{sec:GCIL} provides a detailed introduction of GCIL, while section~\ref{sec:MTL} demonstrates its integration with the original SFT process to enable multi-task training. Finally, section 3.3 discusses our data augmentation strategy.
 
 
 %图 1(a)展示了整体的系统训练流程。3.1放GCIL，3.2放多任务融合，3.3放数据增强。
-Figure 1(left) illustrates the overall training procedure of our system. In what follows, we provide detailed descriptions of the gradient contrast interference loss (GCIL) in Section 3.1, the multi-task learning module in Section 3.2 and the data augmentation module in Section 3.3.
+% Figure 1(left) illustrates the overall training procedure of our system. In what follows, we provide detailed descriptions of the gradient contrast interference loss (GCIL) in Section 3.1, the multi-task learning module in Section 3.2 and the data augmentation module in Section 3.3.
 
 %为了解决融合问题，我们对于遗忘batch采用GCIL，对于非遗忘采用
 %GCIL我们在3.1详细介绍我们数据增强细节，此外为了完成这项技术，我们还要对这份
@@ -230,41 +235,71 @@ Figure 1(left) illustrates the overall training procedure of our system. In what
 
 
 \subsection{Gradient Contrast Interference Loss}
+\label{sec:GCIL}
 %梯度上升由于其在遗忘知识时的强大能力\citet{veldanda2024llm}，使得他在unlearn领域被广泛研究和应用，他的强大能力得益于其可以令梯度往与被训练数据不相似的方向前进，但是这也同样会导致梯度在上升的过程中不受控制的变大。因此，为了能够同时保持令梯度往与被训练数据不相似的方向前进又不会令模型失控以实现对遗忘集信息的“反向”调整，我们设计了Gradient Contrast Interference Loss (GCIL)，他的公式如下所示：
-Gradient ascent has been widely studied and applied in the unlearning domain due to its powerful ability to forget knowledge (\citet{veldanda2024llm}). Its effectiveness stems from its ability to direct gradients away from the learned data, effectively pushing the model in directions that deviate from the original training data. However, this strength also leads to the risk of uncontrolled gradient growth during the ascent. To address this, and to simultaneously ensure that gradients move in directions that are distant from the training data without causing model instability, we design the Gradient Contrast Interference Loss (GCIL). The formula for GCIL is as follows:
+% Gradient ascent has been widely studied and applied in the unlearning domain due to its powerful ability to forget knowledge (\citet{veldanda2024llm}). Its effectiveness stems from its ability to direct gradients away from the learned data, effectively pushing the model in directions that deviate from the original training data. However, this strength also leads to the risk of uncontrolled gradient growth during the ascent. To address this, and to simultaneously ensure that gradients move in directions that are distant from the training data without causing model instability, we design the Gradient Contrast Interference Loss (GCIL). The formula for GCIL is as follows:
+
+% 不同于梯度上升，我们重新设计了一个新的Loss： GCIL， 使得其在执行梯度下降时也能达成训练模型遗忘的功能。其公式如下：
+
+Unlike traditional gradient ascent, we redesign a novel loss function, GCIL, which enables the model to achieve the forgetting effect even during gradient descent. The formulation is as follows:
 
 %L=a*(1/L_ntp(x_input,y_output))
 \begin{equation}
-L_{GCIL}=\alpha  \times  \frac{1}{L_{ntp}(x_{input},y_{output})}
+L_{gcil}=\alpha  \times  \frac{1}{L_{ntp}(x_{input},y_{forget})}
 \end{equation}
 
 %其中L_ntp(x_input,y_output)表示模型以遗忘集原始输出y_output作为下一个词预测目标时得到的语言建模损失，为缩放因子用于控制损失量级。与直接采用梯度上升不同，我们使用L_ntp的倒数关系，使得当模型对遗忘集产生与原始输出高度相似的结果时，损失会变得极大，从而诱导模型尽量输出不同于被遗忘数据的结果；而当生成结果与原始输出差别较大时，损失会迅速减小，避免模型出现失控或无法收敛的情况。为了保证两种损失不产生互相干扰，我们在产生每个训练batch时，batch内只包含一种损失的数据。
-where $L_{ntp}(x_{input},y_{output})$ denotes the language modeling loss when the model uses the original output $y_{output}$ of the forget set as the prediction target, and $\alpha$ is a scaling factor that regulates the magnitude of the loss. Unlike directly performing gradient ascent, we apply an inverse relationship of $L_{ntp}$. When the model generates results that closely resemble the original output in the forget set, the loss becomes very large, thereby encouraging the model to produce outputs that differ significantly from the forgotten data; conversely, when the model generates outputs that deviate significantly from the original forgotten text, the loss rapidly diminishes, preventing the model from diverging or failing to converge. To ensure these two losses do not interfere with each other, we only include one type of loss data per training batch.
+% where $L_{ntp}(x_{input},y_{output})$ denotes the language modeling loss when the model uses the original output $y_{output}$ of the forget set as the prediction target, and $\alpha$ is a scaling factor that regulates the magnitude of the loss. Unlike directly performing gradient ascent, we apply an inverse relationship of $L_{ntp}$. When the model generates results that closely resemble the original output in the forget set, the loss becomes very large, thereby encouraging the model to produce outputs that differ significantly from the forgotten data; conversely, when the model generates outputs that deviate significantly from the original forgotten text, the loss rapidly diminishes, preventing the model from diverging or failing to converge. To ensure these two losses do not interfere with each other, we only include one type of loss data per training batch.
+
+% 其中L_NTP为常规SFT所使用的next token prediction loss.alpha为缩放因子。当模型输出与需要被遗忘的信息相近的分布时，该loss会变得非常大，反之则会变得很小。相比于梯度上升容易导致模型失控，该Loss更加稳定。其确保了所造成的遗忘被被控制在了安全范围内。
+
+Here, $L_{ntp}(x_{input},y_{forget})$ represents the next-token prediction loss used in conventional SFT, and $\alpha$ is a scaling factor. When the model's output closely aligns with the distribution of the information to be forgotten, the loss increases significantly; conversely, it remains low when the output deviates from that information. Compared to gradient ascent, which can easily lead to model instability, GCIL offers a more stable approach, ensuring that the induced forgetting remains within a controlled and safe range.
 
 \subsection{Multi-Task Learning}
+\label{sec:MTL}
 %本任务要求模型在遗忘集（需遗忘或篡改信息）和保留集（需保持正确信息）之间达到平衡，兼顾“有效遗忘”与“信息保留”。通过对比分析遗忘集与保留集的文本，我们发现两者在词汇、主题等方面高度相似，但在预测目标上截然不同。为此，我们采用了多任务学习（Multi-Task Learning, MTL）的范式，将二者统一在一个模型框架中进行训练。因此，我们定义了两项子任务：
 
-This task demands a balance between the forget set (where information must be erased or distorted) and the retain set (where the original knowledge must be preserved), thus requiring both “effective forgetting” and “information retention.” 
-Through comparative analyses of the forget and retain sets, we found that they overlap significantly in terms of vocabulary and topics, yet require starkly different predictive objectives. 
-Consequently, we adopt a Multi-Task Learning (MTL) paradigm that unifies both sets within a single model framework. We define two sub-tasks:
+% This task demands a balance between the forget set (where information must be erased or distorted) and the retain set (where the original knowledge must be preserved), thus requiring both “effective forgetting” and “information retention.” 
+% Through comparative analyses of the forget and retain sets, we found that they overlap significantly in terms of vocabulary and topics, yet require starkly different predictive objectives. 
+% Consequently, we adopt a Multi-Task Learning (MTL) paradigm that unifies both sets within a single model framework. We define two sub-tasks:
 
+% \begin{itemize}
+% 	\item \noindent\textbf{Forget-Set Task} For the data that needs to be forgotten, we use GCIL to enable controlled forgetting.
+% 	\item \noindent\textbf{Retain-Set Task} For the data that needs to be retained, we use the common language modeling loss, next token prediction loss, to train these data, preventing it from being forgotten during the training process.
+% \end{itemize}
+
+% 为了训练模型遗忘制定内容的同时还能保留需要保留的信息，我们设计了两个task：Forget-Set Task 和Retain-Set Task。 Forget-Set Task面向Unlearning 任务。其数据为待遗忘的数据，其Loss为GCIL。Retain-set Task面向信息保留任务。其数据为不盖被遗忘的数据。其Loss为传统L_NTP. 
+To enable the model to forget specified content while retaining the information we want to keep, we design two tasks: the Forget-Set Task and the Retain-Set Task.
 \begin{itemize}
-	\item \noindent\textbf{Forget-Set Task} For the data that needs to be forgotten, we use GCIL to enable controlled forgetting.
-	\item \noindent\textbf{Retain-Set Task} For the data that needs to be retained, we use the common language modeling loss, next token prediction loss, to train these data, preventing it from being forgotten during the training process.
+	\item The Forget-Set Task focuses on the unlearning objective, using data that needs to be forgotten and optimizing the model with $L_{gcil}$.
+	\item The Retain-Set Task ensures information retention, leveraging non-forgotten data and employing the conventional next-token prediction loss $L_{ntp}$.
 \end{itemize}
+
+% 为了保证两个任务不产生相互干扰，我们让每个batch 数据只包含一类任务数据。通过交替训练的方式，让模型达成可控的遗忘的目标。
+
+To prevent interference between the two tasks, each batch contains data from only one task at a time. By alternating training between these tasks, the model achieves controlled forgetting in a stable manner.
+
 
 
 \subsection{Data Augmentation} 
+\label{sec:DA}
 
 %我们发现这次比赛中无论哪个子任务的数据都存在输出长短差异巨大的文本。并且进一步实验后，我们还发现如果直接针对这些任务进行训练，模型往往难以同时兼顾长文本和段文本的效果。具体来说，如果原始输出是短文本，那么训练后的模型往往可以很好的遗忘相关知识，而对于长文本，则训练后的模型输出与原始输出近乎没有任何不同。
-We found that in this competition, the data across all sub-tasks contained texts with significantly varying lengths. Further experiments revealed that when training directly on these tasks, the model often struggles to balance the effectiveness of forgetting for both long and short texts. Specifically, if the original output is a short text, the trained model is able to effectively forget the relevant knowledge. However, for long texts, the output from the trained model shows almost no difference from the original output.
+% We found that in this competition, the data across all sub-tasks contained texts with significantly varying lengths. Further experiments revealed that when training directly on these tasks, the model often struggles to balance the effectiveness of forgetting for both long and short texts. Specifically, if the original output is a short text, the trained model is able to effectively forget the relevant knowledge. However, for long texts, the output from the trained model shows almost no difference from the original output.
+
+% 我们发现本次比赛数据文本长短存在长尾现象。在进行进一步的实验后，我们发现该长尾现象会影响模型效果。比如，如果原始输出是短文本，那么unlearning后的模型可以遗忘相关知识。但是如果原始输出为长文本，则unlearning 流程可能会失败。
+We observe a long-tail distribution phenomenon in output length within the competition dataset. Further experiments reveal that this imbalance adversely affects model performance. For instance, if the original output is a short text, the unlearning process effectively removes the associated knowledge. However, when the original output is a long text, the unlearning procedure may fail.
 
 %为解决上述问题，我们提出了一种针对长文本的重新切分策略。具体而言，对于长度较长的文本，我们先将其按照上下文语义边界或句子结构进行拆分，形成多段由短到长的子文本，再分别进行数据增强处理。图 1(b) 中详细展示了长文本切分的具体过程。与初始的统一替换方法相比，该切分策略能够更好地保留不同段落或句子间的语义一致性，提升对不同长度文本的适应性。
-To address this issue, we propose a segmentation strategy tailored for long texts. 
-Concretely, for long outputs, we first split them according to punctuation, forming multiple segments from short to long. 
-We then apply data augmentation to each segment accordingly. 
-Figure 1(right) presents a detailed illustration of the segmentation process for long texts. 
-Compared to the initial blanket replacement, this segmentation strategy better preserves semantic coherence across different paragraphs or sentences, thereby improving adaptability to diverse text lengths.
+% To address this issue, we propose a segmentation strategy tailored for long texts. 
+% Concretely, for long outputs, we first split them according to punctuation, forming multiple segments from short to long. 
+% We then apply data augmentation to each segment accordingly. 
+% Figure 1(right) presents a detailed illustration of the segmentation process for long texts. 
+% Compared to the initial blanket replacement, this segmentation strategy better preserves semantic coherence across different paragraphs or sentences, thereby improving adaptability to diverse text lengths.
+
+% 为了解决上述问题，我们提出了一种基于重新切分的数据增强策略，以平衡长短文本分布不平衡的问题。我们将长文本按语句进行拆分，并逐步将部分输出挪到输入中从而生成更短的输出作为训练样本。该流程如图1右侧所示。该方案能很好的提升模型对不同长度文本的适应性。
+
+To address this issue, we propose a data augmentation strategy based on re-segmentation to balance the distribution of short and long output. Specifically, we segment long output into individual sentences and incrementally move portions of the output into the input, generating shorter outputs as training samples. This process, illustrated in figure~\ref{fig:overview} right, enhances the model's adaptability to varying output lengths.
 
 
 
@@ -305,21 +340,45 @@ Compared to the initial blanket replacement, this segmentation strategy better p
 %   'dropout': 0.05
 % }
 
-In this task, we employ a LoRA approach(\citet{hu2022lora}) to fine-tune a large language model, and the parameters are set as follows: $r=8$, $\alpha=32$, $dropout=0.05$.
-All experiments in this paper were conducted using the dataset provided by Semeval2025 Task4\citep{ramakrishna2025lumellmunlearningmultitask}, which was released during the competition. 
-All offline experiments are conducted on a single NVIDIA A100(40 GB) GPU, and each training session is completed within one hour. 
+% In this task, we employ a LoRA approach \cite{hu2022lora} to fine-tune a large language model, and the parameters are set as follows: $r=8$, $\alpha=32$, $dropout=0.05$.
+% All experiments in this paper were conducted using the dataset provided by Semeval2025 Task4\citep{ramakrishna2025lumellmunlearningmultitask}, which was released during the competition. 
+% All offline experiments are conducted on a single NVIDIA A100(40 GB) GPU, and each training session is completed within one hour. 
 
-The final evaluation score is computed as the average of three components:
+% The final evaluation score is computed as the average of three components:
 
+% \begin{itemize}
+% \item \noindent\textbf{Task Aggregate Score} This method is used to measure the model's completion of various tasks.
+
+% \item \noindent\textbf{Membership Inference Attack (MIA)} This metric evaluates the extent to which the relevant knowledge is preserved or effectively forgotten.
+
+% \item \noindent\textbf{MMLU Score} This serves as a measure of whether the model’s overall linguistic capability suffers any degradation after the unlearning process.
+% \end{itemize}
+
+% 本次比赛赛方要求在两个模型上进行unlearning：OLMo-7B 和OLMo-1B。 其原始任务包含sentence completion and question-answering。为了评估unlearning的效果，赛方提出了以下四个评估指标。
+
+% 1. Task Aggregate Score(TAS): This method is used to measure the model's completion of various tasks.
+% 2. Membership Inference Attack Score (MIA): This metric evaluates the extent to which the relevant knowledge is preserved or effectively forgotten.
+% 3. MMLU Score: This serves as a measure of whether the model’s overall linguistic capability suffers any degradation after the unlearning process
+% 4. Final Score: The average of the previous three scores.
+
+% 我们全方位的探索了不同技术组合对于最终unlearning效果的影响，同时还对模块和超参数进行了消融试验。其结果分别在Section5 和seciotn6中。
+
+% 我们的所有训练均采用LoRA来微调模型。Rank，alpha和dropout分别被设置为8， 32，和0.05。 所有试验都使用1张Nvidia A100(40G)显卡，并且每个unlearning process均在1小时之内。
+
+In this competition, the organizers required unlearning to be performed on two models: OLMo-7B and OLMo-1B. The original tasks included sentence completion and question-answering. To evaluate the effectiveness of unlearning, the organizers proposed the following four evaluation metrics:
 \begin{itemize}
-\item \noindent\textbf{Task Aggregate Score} This method is used to measure the model's completion of various tasks.
-
-\item \noindent\textbf{Membership Inference Attack (MIA)} This metric evaluates the extent to which the relevant knowledge is preserved or effectively forgotten.
-
-\item \noindent\textbf{MMLU Score} This serves as a measure of whether the model’s overall linguistic capability suffers any degradation after the unlearning process.
+	\item \textbf{Task Aggregate Score (TAS)}: This metric measures the model's performance across various tasks.
+	\item \textbf{Membership Inference Attack Score (MIA)}: This evaluates the extent to which the relevant knowledge is retained or effectively forgotten.
+	\item \textbf{MMLU Score}: This measures whether the model's overall linguistic capabilities degrade after the unlearning process.
+	\item \textbf{Final Score}: The average of the previous three scores.
 \end{itemize}
 
+We thoroughly explored the impact of different technical combinations on the final unlearning outcome and conducted ablation studies on the modules and hyperparameters. The results are presented in section~\ref{sec:Result} and section~\ref{sec:Ablation}.
+
+All training was performed using LoRA \cite{hu2022lora} for model fine-tuning, with Rank, alpha, and dropout set to 8, 32, and 0.05, respectively. All experiments were conducted on a single Nvidia A100 (40G) GPU, and each unlearning process was completed within one hour.
+
 \section{Result}
+\label{sec:Result}
 
 %Experiment setup只写表2中的内容
 
@@ -355,6 +414,7 @@ Due to computational resource limitations, the best result we achieved before th
 
 %表2删掉EP和LR，上面加个配置
 \section{Ablation Study}
+\label{sec:Ablation}
 %针对我们的系统，我们还对GCIL、finetune retain data、数据增强、参数敏感性分别进行了消融实验。并尝试了进一步扩展GCIL。我们列出了一部分重要的结果，全部的消融实验结果可以在附录A种查看。
 
 For our system, we also conducted ablation experiments on GCIL, fine-tuning the retain data, data augmentation, and parameter sensitivity, and further explored the extension of GCIL. We present a subset of the key results here, with the complete ablation study results available in Appendix A.
