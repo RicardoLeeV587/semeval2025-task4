@@ -405,7 +405,8 @@ In this competition, the organizers required unlearning to be performed on two m
 
 We thoroughly explored the impact of different technical combinations on the final unlearning outcome and conducted ablation studies on the modules and hyperparameters. Due to the time limit, all experiments were carried on OLMo-1B. All results presented are based on data publicly released by the organizers during the competition period. The results are presented in section~\ref{sec:Result} and section~\ref{sec:Ablation}.
 
-All training was performed using LoRA \cite{hu2022lora} for model fine-tuning, with Rank, alpha, and dropout set to 8, 32, and 0.05, respectively. Unless otherwise specified in the tables, the corresponding experimental results are obtained using the following parameter settings: $epoch=5$, $lr=1e-4$, and $batch=32$ and $\alpha=1$ for GCIL. All experiments were conducted on a single Nvidia A100 (40G) GPU, and each unlearning process was completed within one hour.
+All training was performed using LoRA \cite{hu2022lora} for model fine-tuning, with Rank, alpha, and dropout set to 8, 32, and 0.05, respectively. 
+For GCIL, $\alpha$ is set as 1. For the training hyperparameters, we used the following settings:$epoch=5$, $lr=1e-4$, and $batch=32$. All experiments were conducted on a single Nvidia A100 (40G) GPU, and each unlearning process was completed within one hour.
 
 \section{Result}
 \label{sec:Result}
