@@ -119,7 +119,12 @@
 
 %本文描述了我们在SemEval-2025任务4中的解决方案，描述了一种用于解决有限资源下用于大模型unlearning sensitive datasets的监督微调方法。我们的方法集成了多任务学习、梯度干扰以及数据增强。通过这种方法，我们的方法在部分任务中表现优异。此外，通过消融实验和结果分析我们发现了单纯的监督微调在unlearning sensitive datasets in LLMs中可能存在的一些问题。
 
-This paper presents our solution for SemEval-2025 Task 4, introducing a supervised fine-tuning method for unlearning sensitive data in large language models (LLMs) under resource constraints. Our approach combines multi-task learning, gradient interference, and data augmentation, achieving promising results across several tasks. Additionally, through extensive ablation experiments and detailed result analysis, we identify potential issues that arise when relying solely on supervised fine-tuning for unlearning sensitive data.
+% This paper presents our solution for SemEval-2025 Task 4, introducing a supervised fine-tuning method for unlearning sensitive data in large language models (LLMs) under resource constraints. Our approach combines multi-task learning, gradient interference, and data augmentation, achieving promising results across several tasks. Additionally, through extensive ablation experiments and detailed result analysis, we identify potential issues that arise when relying solely on supervised fine-tuning for unlearning sensitive data.
+
+% 随着LLM逐渐的流行，如何使LLM忘记在训练期间记住的非合规数据也越来越受人关注。Machine Unlearning便是研究如何在有限的资源内抹除LLM所记住的敏感信息。为了推进对这个领域的研究，SemEval2025-task11 "Unlearning sensitive content from Large Language Models" 提出了包含三个unlearning datasets，并通过评估遗忘的效果与标准能力的保持来构建Unlearning的benchmark。在我们的工作中，我们提出了一种更加可控的遗忘Loss： GCIL，并将其同不同技术方案搭配以探索更高效可控的Unlearning 训练方式。最终，我们的系统在leaderboard上排名第五。
+
+As the Large Language Model (LLM) gains widespread adoption, increasing attention has been given to the challenge of making LLM forget non-compliant data memorized during its pre-training. Machine Unlearning focuses on efficiently erasing sensitive information from LLM under limited computational resources. To advance research in this area, SemEval 2025 Task 11: "Unlearning Sensitive Content from Large Language Models" introduces three unlearning datasets and establishes a benchmark by evaluating both forgetting effectiveness and the preservation of standard capabilities. In this work, we propose a more controllable forgetting loss, GCIL, and explore its integration with various techniques to achieve more efficient and controlled unlearning. Our system ultimately ranked 5th on the competition leaderboard.
+
 \end{abstract}
 
 \section{Introduction}
@@ -186,7 +191,7 @@ In this competition, we propose Gradient Contrastive Interference Loss (GCIL). T
 
 Our contributions are as follows:
 \begin{itemize}
-	\item \textbf{Introduction of GCIL}: This technique regulates the loss magnitude by comparing the current output with the information to be forgotten, enabling controlled unlearning within the model. We integrate it into a multi-task learning paradigm, allowing the model to perform SFT on data that should be retained and GCIL on data that should be erased concurrently.
+	\item \textbf{Introduction of GCIL}: This loss control its magnitude by comparing the current output with the information to be forgotten, enabling controlled unlearning within the model. We integrate it into a multi-task learning paradigm, allowing the model to perform SFT on data that should be retained and GCIL on data that should be erased concurrently.
 	\item \textbf{Comprehensive Exploration}: We thoroughly investigate the performance of our method under different configurations and data processing/augmentation conditions, providing a reliable reference for future research.
 	\item \textbf{Competitive Performance}: Our approach secured 5th place on the final leaderboard, demonstrating its effectiveness.
 \end{itemize}
@@ -304,8 +309,8 @@ We observe a long-tail distribution phenomenon in output length within the compe
 
 To address this issue, we propose a data augmentation strategy based on re-segmentation to balance the distribution of short and long output. Specifically, we segment long output into individual sentences and incrementally move portions of the output into the input, generating shorter outputs as training samples. This process, illustrated in figure~\ref{fig:overview} right, enhances the model's adaptability to varying output lengths.
 
-
-
+%此外，我们还尝试了论文1中提到的negative response replace方案。其通过将敏感信息替换为“I don't know”语句并训练，从而达成遗忘的目标。
+In addition, we also try the negative response replace scheme mentioned in \cite{tofu2024}. It achieves the goal of forgetting by replacing sensitive information with the safety terms (for example, "I don't know") and tuning models on it.
 
 \begin{table*}[!t]
   \centering
@@ -331,6 +336,25 @@ To address this issue, we propose a data augmentation strategy based on re-segme
 \end{table*}
 
 
+\begin{table*}[t]
+  \centering
+    \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|}
+    \hline
+        EP & LR & RD & NR & DA & GI & MIA & TAS & MMLU & Final \\ \hline
+        3 & 1.00E-04 & O & × & O & O & 0.135 & 0.245 & 0.272 & 0.217 \\ \hline
+        3 & 1.00E-05 & O & × & O & O & 0.000 & 0.092 & 0.280 & 0.124 \\ \hline
+        3 & 1.00E-06 & O & × & O & O & 0.000 & 0.092 & 0.275 & 0.122 \\ \hline
+        4 & 1.00E-04 & O & × & O & O & 0.215 & 0.278 & 0.270 & 0.254 \\ \hline
+        4 & 1.00E-05 & O & × & O & O & 0.000 & 0.112 & 0.280 & 0.131 \\ \hline
+        4 & 1.00E-06 & O & × & O & O & 0.000 & 0.092 & 0.276 & 0.122 \\ \hline
+        5 & 1.00E-04 & O & × & O & O & 0.593 & 0.395 & 0.275 & 0.421 \\ \hline
+        5 & 1.00E-05 & O & × & O & O & 0.001 & 0.112 & 0.279 & 0.131 \\ \hline
+        5 & 1.00E-06 & O & × & O & O & 0.000 & 0.092 & 0.277 & 0.123 \\ \hline
+    \end{tabular}
+  \caption{
+    Ablation study on hyper-parameters }
+\label{tab:AS1}
+\end{table*}
 
 
 
@@ -376,7 +400,7 @@ In this competition, the organizers required unlearning to be performed on two m
 	\item \textbf{Final Score}: The average of the previous three scores.
 \end{itemize}
 
-We thoroughly explored the impact of different technical combinations on the final unlearning outcome and conducted ablation studies on the modules and hyperparameters. The results are presented in section~\ref{sec:Result} and section~\ref{sec:Ablation}.
+We thoroughly explored the impact of different technical combinations on the final unlearning outcome and conducted ablation studies on the modules and hyperparameters. Due to the time limit, all experiments were carried on OLMo-1B. The results are presented in section~\ref{sec:Result} and section~\ref{sec:Ablation}.
 
 All training was performed using LoRA \cite{hu2022lora} for model fine-tuning, with Rank, alpha, and dropout set to 8, 32, and 0.05, respectively. Unless otherwise specified in the tables, the corresponding experimental results are obtained using the following parameter settings: $epoch=5$, $lr=1e-4$, and $batch=32$. All experiments were conducted on a single Nvidia A100 (40G) GPU, and each unlearning process was completed within one hour.
 
@@ -392,15 +416,33 @@ All training was performed using LoRA \cite{hu2022lora} for model fine-tuning, w
 %由于计算资源的限制，在比赛结束日前，我们拿到的最好结果是倒数第二行，因此我们提交了这个方案。
 %表1展示了我们使用的不同方法的组合对效果的影响。其中GI denotes Gradient Contrast Interference Loss, NR indicates that the original outputs for the forgotten data were replaced with negative responses, 其中 NR所使用的negative responses来自于\citep{tofu2024} , DA signifies the inclusion of data augmentation during training, RD表示对保留集的数据进行finetune, EP represents the number of epochs, and LR denotes the learning rate. 此外我们使用MIA, Task, MMLU, Final分别来指代MIA Score, Task Aggregate Score, MMLU Score以及三者取平均得到的最终得分。
 
-Table 1 illustrates the impact of different method combinations on performance. Here, GI denotes Gradient Contrast Interference Loss, NR indicates that the original outputs for the forgotten data were replaced with negative responses, where the negative responses used for NR are sourced from \citep{tofu2024}. DA signifies the inclusion of data augmentation during training, RD refers to fine-tuning the data in the retain set, EP represents the number of epochs, and LR denotes the learning rate. Additionally, we use MIA, TAS, MMLU, and Final to refer to the MIA Score, Task Aggregate Score, MMLU Score, and the final score, which is the average of the three. Finally, in the experimental tables, "×" denotes the absence of the corresponding technique, while "O" indicates its application.
+Table~\ref{tab:AS2} illustrates the impact of different method combinations on performance. Here, GI denotes Gradient Contrast Interference Loss, NR indicates that the original outputs for the forgotten data are replaced with safety terms. DA is the inclusion of data augmentation during training, RD refers to supervised fine-tuning the data in the retain set,
+% EP represents the number of epochs, and LR denotes the learning rate. Additionally, we use MIA, TAS, MMLU, and Final to refer to the MIA Score, Task Aggregate Score, MMLU Score, and the final score, which is the average of the three. Finally, in the experimental tables, 
+"×" denotes the absence of the corresponding technique, while "O" indicates its application.
 
 %从表1中可以看出，在使用GCIL处理遗忘数据的同时加入数据增强和finetune retain data可以获得最高的效果，这是因为这么做可以同时兼顾不同类型任务以及不同类型的数据。而随着negative responses的加入，效果会随之下降，这可能是因为被遗忘数据同时受到两种损失的影响使得梯度难以始终沿着一个方向进行优化导致的。
 
-As shown in Table 1, the best performance is achieved when GCIL is applied to process forgotten data, combined with data augmentation and fine-tuning the retain data. This approach is effective because it simultaneously accommodates different task types and data types. However, the inclusion of negative responses results in a decline in performance. This may be due to the limited amount of forgotten data, where the simultaneous influence of two different loss functions causes the gradients to struggle to optimize consistently in a single effective direction.
+% As shown in table~\ref{tab:AS2}, t
+% The best performance is achieved when GCIL is applied to process forgotten data, combined with data augmentation and fine-tuning the retain data. This approach is effective because it simultaneously accommodates different task types and data types. However, the inclusion of negative responses results in a decline in performance. This may be due to the limited amount of forgotten data, where the simultaneous influence of two different loss functions causes the gradients to struggle to optimize consistently in a single effective direction.
 
 %由于计算资源的限制，在比赛结束日前，我们拿到的最好结果是表1中第8行的方案，因此我们提交了这个方案。
 
-Due to computational resource limitations, the best result we achieved before the competition deadline was from the eighth configuration in Table 1 (RD\&NR\&GA). As a result, we submitted this configuration.
+% Due to computational resource limitations, the best result we achieved before the competition deadline was from the eighth configuration in table~\ref{tab:AS2} (RD\&NR\&GI). Therefore, we submitted this configuration.
+% 当使用 GCIL 处理遗忘数据，并结合数据增强和微调保留数据时，性能最佳。其成功的原因在于可以多任务训练框架可以很好的平衡遗忘与保留。此外我们还可以得到以下key findings
+
+% 1. 无论采用何种技术组合，微调保留数据都是必不可少的。丢弃RD的试验会导致MMLU分数大幅下降，表明其对应的模型语言能力严重退化。
+% 2. 尽管NR的加入对MMLU会有收益，但是其会损害Unlearning的效果。其原因在于数据量较小所以非常容易过拟合。相比之下GCIL在MMLU和Unlearning的平衡上做的更好
+% 3. DA的加入对于MIA指标有明显增益，但是会略微牺牲MMLU指标。由于最终评分为三个分数的平均，因此总体来看DA具备明显的正向收益。
+The best performance is achieved when using GCIL to process forgotten data while incorporating data augmentation and fine-tuning retained data. This success can be attributed to the multi-task training framework, which effectively balances forgetting and retention. Additionally, we derive the following key findings:
+\begin{itemize}
+	\item Fine-tuning on retained data is essential, regardless of the chosen technique combination. Experiments omitting RD resulted in a significant drop in MMLU scores, indicating severe degradation in the model’s linguistic capabilities.
+	\item Although adding NR improves MMLU, it negatively impacts the unlearning effectiveness. This is due to the small dataset size, making it highly prone to overfitting. In contrast, GCIL achieves a better balance between MMLU and unlearning performance.
+	\item Incorporating DA enhances the MIA metric, albeit with a slight trade-off in MMLU. However, since the final score is the average of the three metrics, DA provides an overall positive impact.
+\end{itemize}
+
+% 由于计算资源的限制，在比赛deadline之前，我们拿到的最平衡的结果是RD\&NR\&GI。因此，我们当时提交了这个方案。
+
+Due to computational constraints, the most balanced result we obtained before the competition deadline was (RD\&NR\&GI). Therefore, our result on the leaderboard is (RD\&NR\&GI) result, not our best result.
 
 % Ablation Study
 %任务系统外，我们还对如下内容进行了消融实验
@@ -420,8 +462,11 @@ Due to computational resource limitations, the best result we achieved before th
 \label{sec:Ablation}
 %针对我们的系统，我们还对GCIL、finetune retain data、数据增强、参数敏感性分别进行了消融实验。并尝试了进一步扩展GCIL。我们列出了一部分重要的结果，全部的消融实验结果可以在附录A种查看。
 
-For our system, we also conducted ablation experiments on GCIL, fine-tuning the retain data, data augmentation, and parameter sensitivity, and further explored the extension of GCIL. We present a subset of the key results here, with the complete ablation study results available in Appendix A.
+% For our system, w
+% We also conducted ablation experiments on GCIL, fine-tuning the retain data, data augmentation, and parameter sensitivity, and further explored the extension of GCIL. We present a subset of the key results here, with the complete ablation results available in Appendix~\ref{sec:appendixA}.
 
+We also explores the impact of different hyperparamter settings, including learning rate, epoch, and magnitude scaling of GCIL. We present the results in the following sections, and attach all experiment results in the Appendix~\ref{sec:appendixA}.
+\iffalse
 % \subsection{梯度干扰及使用原文}
 \subsection{Gradient Contrast Interference Loss \& Fine-tune Retain Data} 
 
@@ -430,36 +475,16 @@ For our system, we also conducted ablation experiments on GCIL, fine-tuning the 
     \begin{tabular}{l|l|l|l|l}
     \hline
         ~ & MIA & TAS & MMLU & Final \\ \hline
-        RF & 0.00 & 0.09 & 0.28 & 0.12 \\ \hline
-        RF\&RD & 0.00 & 0.12 & 0.28 & 0.14 \\ \hline
+        NR & 0.00 & 0.09 & 0.28 & 0.12 \\ \hline
+        NR\&RD & 0.00 & 0.12 & 0.28 & 0.14 \\ \hline
         GI & 0.99 & 0.41 & 0.23 & 0.54 \\ \hline
         GI\&RD & 0.01 & 0.19 & 0.28 & 0.16 \\ \hline
-        GI\&RD\&GA & 0.59 & 0.39 & 0.28 & 0.42 \\ \hline
-        RF\&GI\&RD\&GA & 0.02 & 0.23 & 0.28 & 0.18 \\ \hline
+        GI\&RD\&DA & 0.59 & 0.39 & 0.28 & 0.42 \\ \hline
+        NR\&GI\&RD\&DA & 0.02 & 0.23 & 0.28 & 0.18 \\ \hline
     \end{tabular}
   \caption{The effects of each part of the system.}
   \label{tab:accents}
 \end{table}
-
-\begin{table*}[t]
-  \centering
-    \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|}
-    \hline
-        EP & LR & RD & NR & DA & GI & MIA & TAS & MMLU & Final \\ \hline
-        3 & 1.00E-04 & O & × & O & O & 0.135 & 0.245 & 0.272 & 0.217 \\ \hline
-        3 & 1.00E-05 & O & × & O & O & 0.000 & 0.092 & 0.280 & 0.124 \\ \hline
-        3 & 1.00E-06 & O & × & O & O & 0.000 & 0.092 & 0.275 & 0.122 \\ \hline
-        4 & 1.00E-04 & O & × & O & O & 0.215 & 0.278 & 0.270 & 0.254 \\ \hline
-        4 & 1.00E-05 & O & × & O & O & 0.000 & 0.112 & 0.280 & 0.131 \\ \hline
-        4 & 1.00E-06 & O & × & O & O & 0.000 & 0.092 & 0.276 & 0.122 \\ \hline
-        5 & 1.00E-04 & O & × & O & O & 0.593 & 0.395 & 0.275 & 0.421 \\ \hline
-        5 & 1.00E-05 & O & × & O & O & 0.001 & 0.112 & 0.279 & 0.131 \\ \hline
-        5 & 1.00E-06 & O & × & O & O & 0.000 & 0.092 & 0.277 & 0.123 \\ \hline
-    \end{tabular}
-  \caption{
-    Parameter Sensitivity.  }
-\label{tab:AS1}
-\end{table*}
 
 %表2表明，无论采用哪种方法，微调保留数据都是必不可少的。通过对比微调保留数据前后的输出，我们发现省略微调保留数据会导致模型变得不可控，导致其重复生成相同的单词。这个问题也反映在 MMLU 分数上，当不使用保留数据时，MMLU 分数大幅下降，表明模型的语言能力严重恶化。此外，梯度干扰和负响应替换相关的结果表明，加入梯度干扰显着改善了遗忘效果，同时保留了模型的语言能力；然而，引入负替代会导致性能整体下降，这是由于被遗忘的数据数据量较小，难以同时支撑两个优化目标的引入。并且表4还表明了使用GCIL会比negative response replacement更加有效。 
 
@@ -470,23 +495,18 @@ Table 1 and Table 2 indicate that fine-tuning the retain data is essential, rega
 
 %通过表2的对比可以看出，随着数据增强的加入，系统的unlearn能力进一步提高，通过针对样本输出结果的分析，可以发现在加入数据扩充前，在遇到需要遗忘的知识是长回复是，几乎不存在变化，而在加入数据增强之后，这类样本可以被有效的解决。
 The comparison in Table 2 shows that the incorporation of data augmentation further improves the system's unlearning capabilities. Additionally, the MMLU results demonstrate that the model’s linguistic abilities remain largely unaffected. An analysis of the model's output reveals that, prior to data augmentation, there was virtually no change when dealing with long responses that required forgetting. However, after the inclusion of data augmentation, such samples were effectively handled, resulting in significant improvements in the unlearning process.
-
-
-
+\fi
 
 
 % \subsection{参数敏感性}
-\subsection{Parameter Sensitivity}  
+\subsection{Hyper-parameters ablation}  
 
 %表1显示了在不同参数下，我们的新方法与提交的方法的结果，可以明显看出，两种方法都对于参数非常的敏感，会随着训练的加长效果不断变好。
-Table 3 illustrates the variations in the performance of our method under different parameters. Due to computational resource limitations, we were only able to test results up to a maximum of 5 epochs. However, it is evident that as the number of epochs increases, there is still room for improvement in our method.
-
-
-
+Table~\ref{tab:AS1} illustrates the variations in the performance of our method under different parameters. Due to computational resource limitations, we are only able to test results up to a maximum of 5 epochs. However, it is evident that as the number of epochs increases, there is still room for improvement in our method.
 
 
 \subsection{Amplify GCIL} 
-To further examine the impact of our GCIL approach, we squared its gradient signals to produce more extreme upper and lower bounds for the loss variation. However, as demonstrated in Table 4, this intensification did not yield any noticeable performance improvement.
+To further examine the impact of our GCIL approach, we square its gradient signals to produce more extreme upper and lower bounds for the loss variation. However, as demonstrated in table~\ref{tab:accents}, this magnitude scaling does not yield any noticeable performance improvement.
 
 \begin{table}[h]\footnotesize
   \centering
@@ -506,8 +526,15 @@ To further examine the impact of our GCIL approach, we squared its gradient sign
 
 
 \section{Conclusion} 
-%
+% SemEval-2025 Task4的组织者推出了一个极具挑战性的Machine Unlearning数据集，包含多种不同类型数据和角度的unlearn能力评估。该数据集充分反映了Machine Unlearning当前所面临的诸多挑战。
+The organizers of SemEval-2025 Task 4 introduced three Machine Unlearning datasets, designed to assess unlearning capabilities from multiple perspectives and across various data types. This dataset effectively highlights the key challenges currently faced in Machine Unlearning.
 
+% 在本次比赛中，我们提出了一种更加可控的遗忘Loss：GCIL。我们将其同标准SFT 融合成多任务学习目标，确保模型遗忘的精准性并最大程度保留其通用能力。我们还为其搭配了不同的数据处理与增强策略，从而探索可控的遗忘训练。
+
+In this competition, we proposed a more controllable forgetting loss, GCIL, which we integrated with standard Supervised Fine-Tuning (SFT) into a multi-task learning framework. This approach ensures precise unlearning while maximizing the retention of general capabilities. Additionally, we incorporated various data processing and augmentation strategies to further enhance controllable unlearning.
+
+% 我们的试验证明了GCIL的有效性。同时我们也highlight了Unlearning任务中标准SFT对于需要保留的数据的训练的重要性。这种遗忘-保留的平衡是Unlearning成功的关键。同时我们还为处理数据长尾问题提供了一个行之有效的数据增强解决方案。最终我们在赛方提供的leaderboard上拿到了第五名。
+Our experiments demonstrated the effectiveness of GCIL and underscored the critical role of standard SFT in training on retained data. Striking the right balance between forgetting and retention is essential for successful unlearning. Furthermore, we introduced an effective data augmentation solution to address the long-tail distribution in text length. Ultimately, our system ranked 5th on the official leaderboard.
 
 
 % \section*{Acknowledgments}
@@ -547,7 +574,6 @@ To further examine the impact of our GCIL approach, we squared its gradient sign
 
 
 \begin{longtable}[h]{|r|r|l|l|l|l|l|r|r|l|r|}
-\caption{Ablation Study Results} \\
 % First page header
 \hline
 \multicolumn{1}{|c|}{\textbf{EP}} & \multicolumn{1}{c|}{\textbf{LR}} & \multicolumn{1}{c|}{\textbf{RD}} & \multicolumn{1}{c|}{\textbf{NR}} & \multicolumn{1}{c|}{\textbf{DA}} & \multicolumn{1}{c|}{\textbf{GI}} & \multicolumn{1}{c|}{\textbf{GI2}} & \multicolumn{1}{c|}{\textbf{MIA}} & \multicolumn{1}{c|}{\textbf{TAS}} & \multicolumn{1}{c|}{\textbf{MMLU}} & \multicolumn{1}{c|}{\textbf{Final}} \\ 
@@ -700,7 +726,8 @@ To further examine the impact of our GCIL approach, we squared its gradient sign
 5                                 & 1.00E-06                         & ×                                & ×                                & ×                                & O                                & ×                                 & 0.092                             & 0.275                             & 0.000                              & 0.122                               \\ \hline
 
 
-
+\caption{Ablation Study Results}
+\label{sec:tab_app_ablation}
 \end{longtable}
-
+% \caption{Ablation Study Results}
 \end{document}
