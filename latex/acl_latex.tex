@@ -168,11 +168,11 @@ Detailed code and experimental records are available at the following link: http
 
 % 大型语言模型（LLMs）在各种自然语言任务中取得了巨大成功，但它会记住训练集中的敏感信息。因此不法分子可以通过特殊手段恢复出训练语料的敏感信息，从而带来隐私曝光，版权泄露等潜在风险。机器遗忘（Machine Unlearning）正是为了解决这一问题而新兴的研究领域。其核心挑战包括（1）。 在遗忘的同时依然保留不该遗忘的重要信息与能力（2）不同数据类型的适应性（3）计算成本与效率。 
 
-Large Language Models (LLMs) have achieved remarkable success across various natural language tasks. However, LLMs tend to memorize sensitive information from their training data, posing potential risks such as privacy breaches and copyright violations \cite{wang2024machine}. Malicious actors can exploit this vulnerability to extract confidential content, leading to unintended exposure. Machine Unlearning has emerged as a research field to address this issue, focusing on the following core challenges\cite{qu2023learn, li2025machine}:(1) Preserving essential information and capabilities while ensuring the removal of targeted data. (2) Adapting to different data types. (3) Balancing computational cost and efficiency.
+Large Language Models (LLMs) have achieved remarkable success across various natural language tasks. However, LLMs tend to memorize sensitive information from their training data, posing potential risks such as privacy breaches and copyright violations \cite{wang2024machine}. Malicious attacker can exploit this vulnerability to extract confidential content, leading to unintended exposure. Machine Unlearning has emerged as a research field to address this issue, focusing on the following core challenges\cite{qu2023learn, li2025machine}:(1) Preserving essential information and capabilities while ensuring the removal of targeted data. (2) Adapting to different data types. (3) Balancing computational cost and efficiency.
 
 % SemEVAL2025 Task 4 提出了“Unlearning sensitive content from Large Language Models” 挑战。其目的在于提出一个健全的benchmark来衡量LLM遗忘策略的有效性。其包含三类数据：长篇创意文档，简短个人信息，公开人物传记。每类数据都有预先划定的“遗忘集”（Forget set）和“保留集”（Retain set）。其不仅评估遗忘的效果，还会在MMLU Benchmark上评估通用能力的损失。此外，为了鼓励大家平衡计算成本与最终效果，该比赛的评估还会限制提交方案的运行时间。
 
-SemEval-2025 Task 4 introduced the challenge "Unlearning Sensitive Content from Large Language Models," aiming to establish a robust benchmark for evaluating the effectiveness of unlearning strategies in LLMs \cite{ramakrishna2025lumellmunlearningmultitask}. The task encompasses three data categories: long-form synthetic creative documents with different genres, short form synthetic biographies containing personal information, and real documents sampled from the target model’s training dataset. Each dataset includes predefined "Forget" and "Retain" sets, and encompasses two evaluation tasks: sentence completion and question-answering. The evaluation not only assesses the success of unlearning but also measures the impact on general capabilities using the MMLU Benchmark. To encourage a balance between computational efficiency and performance, the organizers also impose runtime constraints on submitted solutions.
+SemEval-2025 Task 4 introduce the challenge "Unlearning Sensitive Content from Large Language Models," aiming to establish a robust benchmark for evaluating the effectiveness of unlearning strategies in LLMs \cite{ramakrishna2025lumellmunlearningmultitask}. The task encompasses three data categories: long-form synthetic creative documents with different genres, short form synthetic biographies containing personal information, and real documents sampled from the target model’s training dataset. Each dataset includes predefined "Forget" and "Retain" sets, and encompasses two evaluation tasks: sentence completion and question-answering. The evaluation not only assesses the success of unlearning but also measures the impact on general capabilities using the MMLU Benchmark. To encourage a balance between computational efficiency and performance, the organizers also impose runtime constraints on submitted solutions.
 
 % 在本次比赛中，我们提出一种方案：Gradient Contrastive Interference Learning (EUL). 通过扰动模型对于被遗忘数据的梯度来达到遗忘相关知识的作用。同时为了进一步确保遗忘的可控性，我们将其同标准SFT流程融合成了一个多任务学习目标，并且尝试了各种数据处理与增强方案。
 
@@ -191,9 +191,9 @@ In this competition, we propose Effective Unlearning Loss (EUL). This aims to er
 
 Our contributions are as follows:
 \begin{itemize}
-	\item \textbf{Introduction of EUL}: This loss control its magnitude by comparing the current output with the information to be forgotten, enabling controlled unlearning within the model. We integrate it into a multi-task learning paradigm, allowing the model to perform SFT on data that should be retained and EUL on data that should be erased concurrently.
-	\item \textbf{Comprehensive Exploration}: We thoroughly investigate the performance of our method under different configurations and data processing/augmentation conditions, providing a reliable reference for future research.
-	\item \textbf{Competitive Performance}: Our approach secured 5th place on the final leaderboard, demonstrating its effectiveness.
+	\item \textbf{Introduction of EUL}: This loss is the multiplicative inverse of the original SFT loss. Its inverse property makes it effective in making LLM forget the target knowledge. We integrate it into a multi-task learning paradigm, allowing the model to perform SFT on data that should be retained and EUL on data that should be erased concurrently.
+	\item \textbf{Comprehensive Exploration}: We thoroughly investigate the performance of our method under different configurations and data processing/augmentation settings, providing a reliable reference for future research.
+	\item \textbf{Competitive Performance}: Our approach secures 5th place on the final leaderboard, demonstrating its effectiveness.
 \end{itemize}
 
 
@@ -219,9 +219,9 @@ In response, we propose a more pragmatic approach to unlearning in LLMs that com
 % In this competition, we explore a fine-tuning based approach inspired by the concept of gradient ascent, and proposed a more controllable method, the Effective Unlearning Loss (EUL), along with a supporting data augmentation strategy and a multi-task learning framework to enhance the effectiveness of EUL. 
 % Specifically, to address the issue of model instability caused by gradient ascent, we applied a contrastive approach by transforming gradient ascent into a contrast with the original loss function. This was achieved by increasing the loss when the model’s output is similar to the forgotten data and decreasing the loss when the model's output is dissimilar to the forgotten data. Additionally, to ensure that the model retains existing knowledge, we incorporated fine-tuning on the retain data to preserve the relevant knowledge.
 
-In this competition, we propose the Effective Unlearning Loss (EUL), which, combined with traditional Supervised Fine-Tuning (SFT), forms a multi-task learning framework. Meanwhile, we observed a significant performance discrepancy between long and short outputs. To mitigate this issue, we incorporated data augmentation. The overall workflow is illustrated in Figure~\ref{fig:overview}.
+In this competition, we propose the Effective Unlearning Loss (EUL), which, combined with traditional Supervised Fine-Tuning (SFT), forms a multi-task learning framework. Meanwhile, we observe a significant performance discrepancy between long and short outputs. To mitigate this issue, we incorporate data augmentation. The overall workflow is illustrated in Figure~\ref{fig:overview}.
 
-Section~\ref{sec:EUL} provides a detailed introduction of EUL, while section~\ref{sec:MTL} demonstrates its integration with the original SFT process to enable multi-task training. Finally, section 3.3 discusses our data augmentation strategy.
+Section~\ref{sec:EUL} provides a detailed introduction of EUL, while section~\ref{sec:MTL} demonstrates its integration with the original SFT process to enable multi-task training. Finally, section 3.3 discusses our data augmentation strategies.
 
 
 %图 1(a)展示了整体的系统训练流程。3.1放EUL，3.2放多任务融合，3.3放数据增强。
@@ -261,7 +261,7 @@ L_{EUL}=\alpha  \times  \frac{1}{L_{ntp}(x_{input},y_{forget})}
 
 % 其中L_NTP为常规SFT所使用的next token prediction loss.alpha为缩放因子。当模型输出与需要被遗忘的信息相近的分布时，该loss会变得非常大，反之则会变得很小。相比于梯度上升容易导致模型失控，该Loss更加稳定。其确保了所造成的遗忘被被控制在了安全范围内。
 
-Here, $L_{ntp}(x_{input},y_{forget})$ represents the next-token prediction loss used in conventional SFT, and $\alpha$ is a scaling factor. When the model's output closely aligns with the distribution of the information to be forgotten, the loss increases significantly; conversely, it remains low when the output deviates from that information. Compared to gradient ascent, which can easily lead to model instability, EUL offers a more stable approach, ensuring that the induced forgetting remains within a controlled and safe range.
+Here, $L_{ntp}(x_{input},y_{forget})$ represents the next-token prediction loss used in conventional SFT, and $\alpha$ is a scaling factor. When the model's output closely aligns with the distribution of the information to be forgotten, the loss increases significantly; conversely, it remains low when the output deviates from that information. Compared to gradient ascent, which can easily lead to model instability, EUL offers a more stable and effective choice, ensuring that the induced forgetting remains within a controlled and safe range.
 
 \subsection{Multi-Task Learning}
 \label{sec:MTL}
@@ -392,7 +392,7 @@ In addition, we also try the negative response replace scheme mentioned in \cite
 
 % 我们的所有训练均采用LoRA来微调模型。Rank，alpha和dropout分别被设置为8， 32，和0.05。 所有试验都使用1张Nvidia A100(40G)显卡，并且每个unlearning process均在1小时之内。
 
-In this competition, the organizers required unlearning to be performed on two models: OLMo-7B and OLMo-1B. The original tasks included sentence completion and question-answering. To evaluate the effectiveness of unlearning, the organizers proposed the following four evaluation metrics:
+In this competition, the organizers require unlearning to be performed on two models: OLMo-7B and OLMo-1B \cite{groeneveld2024olmo}. The original tasks include sentence completion and question-answering. To evaluate the effectiveness of unlearning, the organizers propose the following four evaluation metrics:
 \begin{itemize}
 	\item \textbf{Task Aggregate Score (TAS)}: This metric measures the model's performance across various tasks.
 	\item \textbf{Membership Inference Attack Score (MIA)}: This evaluates the extent to which the relevant knowledge is retained or effectively forgotten.
@@ -403,10 +403,10 @@ In this competition, the organizers required unlearning to be performed on two m
 %新增所使用的数据
 %新增，给出EUL中的alpha的值
 
-We thoroughly explored the impact of different technical combinations on the final unlearning outcome and conducted ablation studies on the modules and hyperparameters. Due to the time limit, all experiments were carried on OLMo-1B. All results presented are based on data publicly released by the organizers during the competition period. The results are presented in section~\ref{sec:Result} and section~\ref{sec:Ablation}.
+We thoroughly explore the impact of different technical combinations on the final unlearning outcome and conduct ablation studies on the modules and hyperparameters. Due to the time limit, all experiments are carried on OLMo-1B. All results presented are based on data publicly released by the organizers during the competition period. The results are presented in section~\ref{sec:Result} and section~\ref{sec:Ablation}.
 
-All training was performed using LoRA \cite{hu2022lora} for model fine-tuning, with Rank, alpha, and dropout set to 8, 32, and 0.05, respectively. 
-For EUL, $\alpha$ is set as 1. For the training hyperparameters, we used the following settings:$epoch=5$, $lr=1e-4$, and $batch=32$. All experiments were conducted on a single Nvidia A100 (40G) GPU, and each unlearning process was completed within one hour.
+All training is performed using LoRA \cite{hu2022lora} for model fine-tuning, with Rank, alpha, and dropout set to 8, 32, and 0.05, respectively. 
+For EUL, $\alpha$ is set as 1. For the training hyperparameters, we use the following settings:$epoch=5$, $lr=1e-4$, and $batch=32$. All experiments are conducted on a single Nvidia A100 (40G) GPU, and each unlearning process is completed within one hour.
 
 \section{Result}
 \label{sec:Result}
@@ -439,8 +439,10 @@ Table~\ref{tab:AS2} illustrates the impact of different method combinations on p
 % 3. DA的加入对于MIA指标有明显增益，但是会略微牺牲MMLU指标。由于最终评分为三个分数的平均，因此总体来看DA具备明显的正向收益。
 The best performance is achieved when using EUL to process forgotten data while incorporating data augmentation and fine-tuning retained data. This success can be attributed to the multi-task training framework, which effectively balances forgetting and retention.
 %新增, 给出了仅使用EUL以及EUL+DA虽然数值上好看，但是MMLU大幅下降，这是与竞赛目标相悖的。
-It is important to note that although the approaches employing only EUL or the combination of EUL and DA in Table 1 achieve relatively high scores, this performance comes at the significant expense of reduced scores on the MMLU benchmark. Such a substantial degradation implies that the intrinsic capability of the model is severely compromised, which contradicts the intended evaluation criteria of the task. Consequently, these two approaches were not selected as our optimal methods.
-Additionally, we derive the following key findings:
+Note that although the approaches employing only EUL and the combination of EUL and DA achieve relatively high scores, this performance comes at the significant compromise on the MMLU metric. 
+%Such a substantial degradation implies that the intrinsic capability of the model is severely compromised, which contradicts the intended evaluation criteria of the task. Consequently, these two approaches were discarded.
+Such a substantial degradation contradicts the evaluation criteria from the organizers, so we discard them.
+We derive the following key findings:
 \begin{itemize}
 	\item Fine-tuning on retained data is essential, regardless of the chosen technique combination. Experiments omitting RD resulted in a significant drop in MMLU scores, indicating severe degradation in the model’s linguistic capabilities.
 	\item Although adding NR improves MMLU, it negatively impacts the unlearning effectiveness. This is due to the small dataset size, making it highly prone to overfitting. In contrast, EUL achieves a better balance between MMLU and unlearning performance.
@@ -472,7 +474,7 @@ Due to computational constraints, the most balanced result we obtained before th
 % For our system, w
 % We also conducted ablation experiments on EUL, fine-tuning the retain data, data augmentation, and parameter sensitivity, and further explored the extension of EUL. We present a subset of the key results here, with the complete ablation results available in Appendix~\ref{sec:appendixA}.
 
-We also explores the impact of different hyperparamter settings, including learning rate, epoch, and magnitude scaling of EUL. We present the results in the following sections, and attach all experiment results in the Appendix~\ref{sec:appendixA}.
+We also explore the impact of different hyperparamter settings, including learning rate, epoch, and magnitude scaling of EUL. We present the results in the following sections, and attach all experiment results in the Appendix~\ref{sec:appendixA}.
 \iffalse
 % \subsection{梯度干扰及使用原文}
 \subsection{Effective Unlearning Loss \& Fine-tune Retain Data} 
@@ -509,11 +511,11 @@ The comparison in Table 2 shows that the incorporation of data augmentation furt
 \subsection{Hyper-parameters ablation}  
 
 %表1显示了在不同参数下，我们的新方法与提交的方法的结果，可以明显看出，两种方法都对于参数非常的敏感，会随着训练的加长效果不断变好。
-Table~\ref{tab:AS1} illustrates the variations in the performance of our method under different parameters. Due to computational resource limitations, we are only able to test results up to a maximum of 5 epochs. However, it is evident that as the number of epochs increases, there is still room for improvement in our method.
+Table~\ref{tab:AS1} demonstrates the performance variations under different hyperparameters. Due to computational resource limitations, we are only able to test results up to a maximum of 5 epochs. However, it is evident that as the epoch number and learning rate increase, the performance increases
 
 %新增修改，表3改名
 \subsection{Amplify EUL} 
-To further examine the impact of our EUL approach, we square its gradient signals to produce more extreme upper and lower bounds for the loss variation. However, as demonstrated in table~\ref{tab:accents}, this magnitude scaling does not yield any noticeable performance improvement.
+To further examine the impact of our EUL approach, we square the EUL to produce more extreme upper and lower bounds for the loss variation. However, as demonstrated in table~\ref{tab:accents}, this magnitude scaling does not yield any noticeable performance improvement.
 
 \begin{table}[h]\footnotesize
   \centering
@@ -534,14 +536,14 @@ To further examine the impact of our EUL approach, we square its gradient signal
 
 \section{Conclusion} 
 % SemEval-2025 Task4的组织者推出了一个极具挑战性的Machine Unlearning数据集，包含多种不同类型数据和角度的unlearn能力评估。该数据集充分反映了Machine Unlearning当前所面临的诸多挑战。
-The organizers of SemEval-2025 Task 4 introduced three Machine Unlearning datasets, designed to assess unlearning capabilities from multiple perspectives and across various data types. This dataset effectively highlights the key challenges currently faced in Machine Unlearning.
+The organizers of SemEval-2025 Task 4 introduce three Machine Unlearning datasets, design to assess unlearning capabilities from multiple perspectives and across various data types. This dataset effectively highlights the key challenges currently faced in Machine Unlearning.
 
 % 在本次比赛中，我们提出了一种更加可控的遗忘Loss：EUL。我们将其同标准SFT 融合成多任务学习目标，确保模型遗忘的精准性并最大程度保留其通用能力。我们还为其搭配了不同的数据处理与增强策略，从而探索可控的遗忘训练。
 
-In this competition, we proposed a more controllable forgetting loss, EUL, which we integrated with standard Supervised Fine-Tuning (SFT) into a multi-task learning framework. This approach ensures precise unlearning while maximizing the retention of general capabilities. Additionally, we incorporated various data processing and augmentation strategies to further enhance controllable unlearning.
+In this competition, we propose a more controllable forgetting loss, EUL, which we integrate with standard Supervised Fine-Tuning (SFT) into a multi-task learning framework. This approach ensures precise unlearning while maximizing the retention of general capabilities. Additionally, we incorporate various data processing and augmentation strategies to further enhance controllable unlearning.
 
 % 我们的试验证明了EUL的有效性。同时我们也highlight了Unlearning任务中标准SFT对于需要保留的数据的训练的重要性。这种遗忘-保留的平衡是Unlearning成功的关键。同时我们还为处理数据长尾问题提供了一个行之有效的数据增强解决方案。最终我们在赛方提供的leaderboard上拿到了第五名。
-Our experiments demonstrated the effectiveness of EUL and underscored the critical role of standard SFT in training on retained data. Striking the right balance between forgetting and retention is essential for successful unlearning. Furthermore, we introduced an effective data augmentation solution to address the long-tail distribution in text length. Ultimately, our system ranked 5th on the official leaderboard.
+Our experiments demonstrate the effectiveness of EUL and underscored the critical role of standard SFT in training on retained data. Striking the right balance between forgetting and retention is essential for successful unlearning. Furthermore, we introduce an effective data augmentation solution to address the long-tail distribution in text length. Ultimately, our system ranks 5th on the official leaderboard.
 
 
 % \section*{Acknowledgments}
