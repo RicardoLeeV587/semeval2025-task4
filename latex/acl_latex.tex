@@ -46,7 +46,7 @@
 %
 % and set <dim> to something 5cm or larger.
 
-\title{iShumei-Chinchunmei at SemEval-2025 Task 4: A Multi-Task Unlearning Approach Integrating Data Augmentation and Gradient Interference}
+\title{iShumei-Chinchunmei at SemEval-2025 Task 4: A balanced forgetting and retention multi-task framework using effective unlearning loss}
 
 % Author information can be set in various styles:
 % For several authors from the same institution:
@@ -121,9 +121,9 @@
 
 % This paper presents our solution for SemEval-2025 Task 4, introducing a supervised fine-tuning method for unlearning sensitive data in large language models (LLMs) under resource constraints. Our approach combines multi-task learning, gradient interference, and data augmentation, achieving promising results across several tasks. Additionally, through extensive ablation experiments and detailed result analysis, we identify potential issues that arise when relying solely on supervised fine-tuning for unlearning sensitive data.
 
-% 随着LLM逐渐的流行，如何使LLM忘记在训练期间记住的非合规数据也越来越受人关注。Machine Unlearning便是研究如何在有限的资源内抹除LLM所记住的敏感信息。为了推进对这个领域的研究，SemEval2025-task11 "Unlearning sensitive content from Large Language Models" 提出了包含三个unlearning datasets，并通过评估遗忘的效果与标准能力的保持来构建Unlearning的benchmark。在我们的工作中，我们提出了一种更加可控的遗忘Loss： GCIL，并将其同不同技术方案搭配以探索更高效可控的Unlearning 训练方式。最终，我们的系统在leaderboard上排名第五。
+% 随着LLM逐渐的流行，如何使LLM忘记在训练期间记住的非合规数据也越来越受人关注。Machine Unlearning便是研究如何在有限的资源内抹除LLM所记住的敏感信息。为了推进对这个领域的研究，SemEval2025-task11 "Unlearning sensitive content from Large Language Models" 提出了包含三个unlearning datasets，并通过评估遗忘的效果与标准能力的保持来构建Unlearning的benchmark。在我们的工作中，我们提出了一种更加可控的遗忘Loss： EUL，并将其同不同技术方案搭配以探索更高效可控的Unlearning 训练方式。最终，我们的系统在leaderboard上排名第五。
 
-As the Large Language Model (LLM) gains widespread adoption, increasing attention has been given to the challenge of making LLM forget non-compliant data memorized during its pre-training. Machine Unlearning focuses on efficiently erasing sensitive information from LLM under limited computational resources. To advance research in this area, SemEval 2025 Task 11: "Unlearning Sensitive Content from Large Language Models" introduces three unlearning datasets and establishes a benchmark by evaluating both forgetting effectiveness and the preservation of standard capabilities. In this work, we propose a more controllable forgetting loss, GCIL, and explore its integration with various techniques to achieve more efficient and controlled unlearning. Our system ultimately ranked 5th on the competition leaderboard.
+As the Large Language Model (LLM) gains widespread adoption, increasing attention has been given to the challenge of making LLM forget non-compliant data memorized during its pre-training. Machine Unlearning focuses on efficiently erasing sensitive information from LLM under limited computational resources. To advance research in this area, SemEval 2025 Task 11: "Unlearning Sensitive Content from Large Language Models" introduces three unlearning datasets and establishes a benchmark by evaluating both forgetting effectiveness and the preservation of standard capabilities. In this work, we propose a more controllable forgetting loss, Effective Unlearning Loss, and explore its integration with various techniques to achieve more efficient and controlled unlearning. Our system ultimately ranked 5th on the competition leaderboard.
 
 \end{abstract}
 
@@ -174,24 +174,24 @@ Large Language Models (LLMs) have achieved remarkable success across various nat
 
 SemEval-2025 Task 4 introduced the challenge "Unlearning Sensitive Content from Large Language Models," aiming to establish a robust benchmark for evaluating the effectiveness of unlearning strategies in LLMs \cite{ramakrishna2025lumellmunlearningmultitask}. The task encompasses three data categories: long-form synthetic creative documents with different genres, short form synthetic biographies containing personal information, and real documents sampled from the target model’s training dataset. Each dataset includes predefined "Forget" and "Retain" sets, and encompasses two evaluation tasks: sentence completion and question-answering. The evaluation not only assesses the success of unlearning but also measures the impact on general capabilities using the MMLU Benchmark. To encourage a balance between computational efficiency and performance, the organizers also impose runtime constraints on submitted solutions.
 
-% 在本次比赛中，我们提出一种方案：Gradient Contrastive Interference Learning (GCIL). 通过扰动模型对于被遗忘数据的梯度来达到遗忘相关知识的作用。同时为了进一步确保遗忘的可控性，我们将其同标准SFT流程融合成了一个多任务学习目标，并且尝试了各种数据处理与增强方案。
+% 在本次比赛中，我们提出一种方案：Gradient Contrastive Interference Learning (EUL). 通过扰动模型对于被遗忘数据的梯度来达到遗忘相关知识的作用。同时为了进一步确保遗忘的可控性，我们将其同标准SFT流程融合成了一个多任务学习目标，并且尝试了各种数据处理与增强方案。
 
-In this competition, we propose Gradient Contrastive Interference Loss (GCIL). This aims to erase knowledge related to the data to be forgotten by perturbing the model's gradients during training. We integrate this technique with the standard Supervised Fine-Tuning (SFT) process into a multi-task learning paradigm to ensure controllable unlearning. Additionally, various data processing and augmentation strategies \cite{choi2024snap, shi2024ulmr} are explored to see their impact on the final performance.
+In this competition, we propose Effective Unlearning Loss (EUL). This aims to erase knowledge related to the data to be forgotten by perturbing the model's gradients during training. We integrate this technique with the standard Supervised Fine-Tuning (SFT) process into a multi-task learning paradigm to ensure controllable unlearning. Additionally, various data processing and augmentation strategies \cite{choi2024snap, shi2024ulmr} are explored to see their impact on the final performance.
 
 % 我们的贡献如下：
-% 1. 我们提出了GCIL。该技术通过比对当前输出与需要被遗忘的信息的相似性来控制损失的大小，从而实现针对模型可控的遗忘。同时我们还利用多任务学习的方案，让模型在不该遗忘的数据同步进行SFT。
+% 1. 我们提出了EUL。该技术通过比对当前输出与需要被遗忘的信息的相似性来控制损失的大小，从而实现针对模型可控的遗忘。同时我们还利用多任务学习的方案，让模型在不该遗忘的数据同步进行SFT。
 % 2. 我们详细的探索了我们的方案在不同配置，不同数据处理的条件下的效果。这为后续研究提供了可靠的参考依据
 % 3. 我们的方案在最终榜单上排名第5，充分证明了方案的有效性。
 \begin{figure*}[!t]
   \centering
-  \includegraphics[width=1.5\columnwidth]{论文图.png} 
+  \includegraphics[width=2\columnwidth]{论文图.png} 
   \caption{The Overview of Our System.}
   \label{fig:overview}
 \end{figure*}
 
 Our contributions are as follows:
 \begin{itemize}
-	\item \textbf{Introduction of GCIL}: This loss control its magnitude by comparing the current output with the information to be forgotten, enabling controlled unlearning within the model. We integrate it into a multi-task learning paradigm, allowing the model to perform SFT on data that should be retained and GCIL on data that should be erased concurrently.
+	\item \textbf{Introduction of EUL}: This loss control its magnitude by comparing the current output with the information to be forgotten, enabling controlled unlearning within the model. We integrate it into a multi-task learning paradigm, allowing the model to perform SFT on data that should be retained and EUL on data that should be erased concurrently.
 	\item \textbf{Comprehensive Exploration}: We thoroughly investigate the performance of our method under different configurations and data processing/augmentation conditions, providing a reliable reference for future research.
 	\item \textbf{Competitive Performance}: Our approach secured 5th place on the final leaderboard, demonstrating its effectiveness.
 \end{itemize}
@@ -209,26 +209,26 @@ One intuitive unlearning method involves gradient ascent on the forget data, whi
 
 Another unlearning method involves replacing the forgotten knowledge, such as \citet{choi2024snap} and \citet{shi2024ulmr} who replace forgotten answers with negative responses like "I don't know," while \citet{eldan2023s} uses reinforcement learning to identify and replace key phrases. However, \citet{mekala2024alternate} warns that relying solely on negative feedback for unlearning may result in non-sensical outputs and introduce privacy risks, reducing the model's effectiveness.
 
-In response, we propose a more pragmatic approach to unlearning in LLMs that combines multi-task learning, data augmentation, and gradient contrast interference loss (GCIL) to facilitate faster and more efficient knowledge forgetting under constrained resources.
+In response, we propose a more pragmatic approach to unlearning in LLMs that combines multi-task learning, data augmentation, and EUL to facilitate faster and more efficient knowledge forgetting under constrained resources.
 
 
 
 \section{System Overview}
 
-%在这次比赛中，我们着重探索了基于梯度上升思想的fine-tune方案，并进一步提出了更加可控的gradient contrast interference loss (GCIL) 以及用于支撑GCIL生效的配套数据增强方案和多任务学习框架。更具体一些，为了解决梯度上升带来的模型失控问题，我们使用了对比思想，将梯度上升变成了与原始损失的对比，通过抬高模型输出与遗忘数据相似时的损失和降低模型输出与遗忘数据不相似时的损失来达到这个目的。同时为了确保原有的知识不被遗忘，我们还引入了对原始数据进行finetune来保留对应知识。
-% In this competition, we explore a fine-tuning based approach inspired by the concept of gradient ascent, and proposed a more controllable method, the Gradient Contrast Interference Loss (GCIL), along with a supporting data augmentation strategy and a multi-task learning framework to enhance the effectiveness of GCIL. 
+%在这次比赛中，我们着重探索了基于梯度上升思想的fine-tune方案，并进一步提出了更加可控的effective unlearning loss (EUL) 以及用于支撑EUL生效的配套数据增强方案和多任务学习框架。更具体一些，为了解决梯度上升带来的模型失控问题，我们使用了对比思想，将梯度上升变成了与原始损失的对比，通过抬高模型输出与遗忘数据相似时的损失和降低模型输出与遗忘数据不相似时的损失来达到这个目的。同时为了确保原有的知识不被遗忘，我们还引入了对原始数据进行finetune来保留对应知识。
+% In this competition, we explore a fine-tuning based approach inspired by the concept of gradient ascent, and proposed a more controllable method, the Effective Unlearning Loss (EUL), along with a supporting data augmentation strategy and a multi-task learning framework to enhance the effectiveness of EUL. 
 % Specifically, to address the issue of model instability caused by gradient ascent, we applied a contrastive approach by transforming gradient ascent into a contrast with the original loss function. This was achieved by increasing the loss when the model’s output is similar to the forgotten data and decreasing the loss when the model's output is dissimilar to the forgotten data. Additionally, to ensure that the model retains existing knowledge, we incorporated fine-tuning on the retain data to preserve the relevant knowledge.
 
-In this competition, we propose the Gradient Contrastive Interference Loss (GCIL), which, combined with traditional Supervised Fine-Tuning (SFT), forms a multi-task learning framework. Meanwhile, we observed a significant performance discrepancy between long and short outputs. To mitigate this issue, we incorporated data augmentation. The overall workflow is illustrated in Figure~\ref{fig:overview}.
+In this competition, we propose the Effective Unlearning Loss (EUL), which, combined with traditional Supervised Fine-Tuning (SFT), forms a multi-task learning framework. Meanwhile, we observed a significant performance discrepancy between long and short outputs. To mitigate this issue, we incorporated data augmentation. The overall workflow is illustrated in Figure~\ref{fig:overview}.
 
-Section~\ref{sec:GCIL} provides a detailed introduction of GCIL, while section~\ref{sec:MTL} demonstrates its integration with the original SFT process to enable multi-task training. Finally, section 3.3 discusses our data augmentation strategy.
+Section~\ref{sec:EUL} provides a detailed introduction of EUL, while section~\ref{sec:MTL} demonstrates its integration with the original SFT process to enable multi-task training. Finally, section 3.3 discusses our data augmentation strategy.
 
 
-%图 1(a)展示了整体的系统训练流程。3.1放GCIL，3.2放多任务融合，3.3放数据增强。
-% Figure 1(left) illustrates the overall training procedure of our system. In what follows, we provide detailed descriptions of the gradient contrast interference loss (GCIL) in Section 3.1, the multi-task learning module in Section 3.2 and the data augmentation module in Section 3.3.
+%图 1(a)展示了整体的系统训练流程。3.1放EUL，3.2放多任务融合，3.3放数据增强。
+% Figure 1(left) illustrates the overall training procedure of our system. In what follows, we provide detailed descriptions of the effective unlearning loss (EUL) in Section 3.1, the multi-task learning module in Section 3.2 and the data augmentation module in Section 3.3.
 
-%为了解决融合问题，我们对于遗忘batch采用GCIL，对于非遗忘采用
-%GCIL我们在3.1详细介绍我们数据增强细节，此外为了完成这项技术，我们还要对这份
+%为了解决融合问题，我们对于遗忘batch采用EUL，对于非遗忘采用
+%EUL我们在3.1详细介绍我们数据增强细节，此外为了完成这项技术，我们还要对这份
 %，对于这个数据进行了适配，提出了梯度对比干扰，
 %为了解决什么问题，我们提出了什么，
 
@@ -242,18 +242,18 @@ Section~\ref{sec:GCIL} provides a detailed introduction of GCIL, while section~\
 
 
 
-\subsection{Gradient Contrast Interference Loss}
-\label{sec:GCIL}
-%梯度上升由于其在遗忘知识时的强大能力\citet{veldanda2024llm}，使得他在unlearn领域被广泛研究和应用，他的强大能力得益于其可以令梯度往与被训练数据不相似的方向前进，但是这也同样会导致梯度在上升的过程中不受控制的变大。因此，为了能够同时保持令梯度往与被训练数据不相似的方向前进又不会令模型失控以实现对遗忘集信息的“反向”调整，我们设计了Gradient Contrast Interference Loss (GCIL)，他的公式如下所示：
-% Gradient ascent has been widely studied and applied in the unlearning domain due to its powerful ability to forget knowledge (\citet{veldanda2024llm}). Its effectiveness stems from its ability to direct gradients away from the learned data, effectively pushing the model in directions that deviate from the original training data. However, this strength also leads to the risk of uncontrolled gradient growth during the ascent. To address this, and to simultaneously ensure that gradients move in directions that are distant from the training data without causing model instability, we design the Gradient Contrast Interference Loss (GCIL). The formula for GCIL is as follows:
+\subsection{Effective Unlearning Loss}
+\label{sec:EUL}
+%梯度上升由于其在遗忘知识时的强大能力\citet{veldanda2024llm}，使得他在unlearn领域被广泛研究和应用，他的强大能力得益于其可以令梯度往与被训练数据不相似的方向前进，但是这也同样会导致梯度在上升的过程中不受控制的变大。因此，为了能够同时保持令梯度往与被训练数据不相似的方向前进又不会令模型失控以实现对遗忘集信息的“反向”调整，我们设计了Effective Unlearning Loss (EUL)，他的公式如下所示：
+% Gradient ascent has been widely studied and applied in the unlearning domain due to its powerful ability to forget knowledge (\citet{veldanda2024llm}). Its effectiveness stems from its ability to direct gradients away from the learned data, effectively pushing the model in directions that deviate from the original training data. However, this strength also leads to the risk of uncontrolled gradient growth during the ascent. To address this, and to simultaneously ensure that gradients move in directions that are distant from the training data without causing model instability, we design the Effective Unlearning Loss (EUL). The formula for EUL is as follows:
 
-% 不同于梯度上升，我们重新设计了一个新的Loss： GCIL， 使得其在执行梯度下降时也能达成训练模型遗忘的功能。其公式如下：
+% 不同于梯度上升，我们重新设计了一个新的Loss： EUL， 使得其在执行梯度下降时也能达成训练模型遗忘的功能。其公式如下：
 
-Unlike traditional gradient ascent, we redesign a novel loss function, GCIL, which enables the model to achieve the forgetting effect even during gradient descent. The formulation is as follows:
+Unlike traditional gradient ascent, we redesign a novel loss function, EUL, which enables the model to achieve the forgetting effect even during gradient descent. The formulation is as follows:
 
 %L=a*(1/L_ntp(x_input,y_output))
 \begin{equation}
-L_{gcil}=\alpha  \times  \frac{1}{L_{ntp}(x_{input},y_{forget})}
+L_{EUL}=\alpha  \times  \frac{1}{L_{ntp}(x_{input},y_{forget})}
 \end{equation}
 
 %其中L_ntp(x_input,y_output)表示模型以遗忘集原始输出y_output作为下一个词预测目标时得到的语言建模损失，为缩放因子用于控制损失量级。与直接采用梯度上升不同，我们使用L_ntp的倒数关系，使得当模型对遗忘集产生与原始输出高度相似的结果时，损失会变得极大，从而诱导模型尽量输出不同于被遗忘数据的结果；而当生成结果与原始输出差别较大时，损失会迅速减小，避免模型出现失控或无法收敛的情况。为了保证两种损失不产生互相干扰，我们在产生每个训练batch时，batch内只包含一种损失的数据。
@@ -261,7 +261,7 @@ L_{gcil}=\alpha  \times  \frac{1}{L_{ntp}(x_{input},y_{forget})}
 
 % 其中L_NTP为常规SFT所使用的next token prediction loss.alpha为缩放因子。当模型输出与需要被遗忘的信息相近的分布时，该loss会变得非常大，反之则会变得很小。相比于梯度上升容易导致模型失控，该Loss更加稳定。其确保了所造成的遗忘被被控制在了安全范围内。
 
-Here, $L_{ntp}(x_{input},y_{forget})$ represents the next-token prediction loss used in conventional SFT, and $\alpha$ is a scaling factor. When the model's output closely aligns with the distribution of the information to be forgotten, the loss increases significantly; conversely, it remains low when the output deviates from that information. Compared to gradient ascent, which can easily lead to model instability, GCIL offers a more stable approach, ensuring that the induced forgetting remains within a controlled and safe range.
+Here, $L_{ntp}(x_{input},y_{forget})$ represents the next-token prediction loss used in conventional SFT, and $\alpha$ is a scaling factor. When the model's output closely aligns with the distribution of the information to be forgotten, the loss increases significantly; conversely, it remains low when the output deviates from that information. Compared to gradient ascent, which can easily lead to model instability, EUL offers a more stable approach, ensuring that the induced forgetting remains within a controlled and safe range.
 
 \subsection{Multi-Task Learning}
 \label{sec:MTL}
@@ -272,14 +272,14 @@ Here, $L_{ntp}(x_{input},y_{forget})$ represents the next-token prediction loss 
 % Consequently, we adopt a Multi-Task Learning (MTL) paradigm that unifies both sets within a single model framework. We define two sub-tasks:
 
 % \begin{itemize}
-% 	\item \noindent\textbf{Forget-Set Task} For the data that needs to be forgotten, we use GCIL to enable controlled forgetting.
+% 	\item \noindent\textbf{Forget-Set Task} For the data that needs to be forgotten, we use EUL to enable controlled forgetting.
 % 	\item \noindent\textbf{Retain-Set Task} For the data that needs to be retained, we use the common language modeling loss, next token prediction loss, to train these data, preventing it from being forgotten during the training process.
 % \end{itemize}
 
-% 为了训练模型遗忘制定内容的同时还能保留需要保留的信息，我们设计了两个task：Forget-Set Task 和Retain-Set Task。 Forget-Set Task面向Unlearning 任务。其数据为待遗忘的数据，其Loss为GCIL。Retain-set Task面向信息保留任务。其数据为不盖被遗忘的数据。其Loss为传统L_NTP. 
+% 为了训练模型遗忘制定内容的同时还能保留需要保留的信息，我们设计了两个task：Forget-Set Task 和Retain-Set Task。 Forget-Set Task面向Unlearning 任务。其数据为待遗忘的数据，其Loss为EUL。Retain-set Task面向信息保留任务。其数据为不盖被遗忘的数据。其Loss为传统L_NTP. 
 To enable the model to forget specified content while retaining the information we want to keep, we design two tasks: the Forget-Set Task and the Retain-Set Task.
 \begin{itemize}
-	\item The Forget-Set Task focuses on the unlearning objective, using data that needs to be forgotten and optimizing the model with $L_{gcil}$.
+	\item The Forget-Set Task focuses on the unlearning objective, using data that needs to be forgotten and optimizing the model with $L_{EUL}$.
 	\item The Retain-Set Task ensures information retention, leveraging non-forgotten data and employing the conventional next-token prediction loss $L_{ntp}$.
 \end{itemize}
 
@@ -317,7 +317,7 @@ In addition, we also try the negative response replace scheme mentioned in \cite
     \begin{tabular}{llll|llllll}
     \hline
     \multicolumn{4}{c}{\textbf{Model Component}} & \multicolumn{4}{c}{\textbf{Score}} \\ \hline
-         RD & NR & DA & GI & MIA & TAS & MMLU & Final \\ \hline
+         RD & NR & DA & EUL & MIA & TAS & MMLU & Final \\ \hline
          × & O & × & × & 0.000 & 0.092 & 0.281 & 0.124 \\ \hline
          × & O & O & × & 0.000 & 0.092 & 0.278 & 0.124 \\ \hline
          O & O & × & × & 0.000 & 0.124 & 0.283 & 0.135 \\ \hline
@@ -340,7 +340,7 @@ In addition, we also try the negative response replace scheme mentioned in \cite
   \centering
     \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|}
     \hline
-        EP & LR & RD & NR & DA & GI & MIA & TAS & MMLU & Final \\ \hline
+        EP & LR & RD & NR & DA & EUL & MIA & TAS & MMLU & Final \\ \hline
         3 & 1.00E-04 & O & × & O & O & 0.135 & 0.245 & 0.272 & 0.217 \\ \hline
         3 & 1.00E-05 & O & × & O & O & 0.000 & 0.092 & 0.280 & 0.124 \\ \hline
         3 & 1.00E-06 & O & × & O & O & 0.000 & 0.092 & 0.275 & 0.122 \\ \hline
@@ -401,12 +401,12 @@ In this competition, the organizers required unlearning to be performed on two m
 \end{itemize}
 
 %新增所使用的数据
-%新增，给出GCIL中的alpha的值
+%新增，给出EUL中的alpha的值
 
 We thoroughly explored the impact of different technical combinations on the final unlearning outcome and conducted ablation studies on the modules and hyperparameters. Due to the time limit, all experiments were carried on OLMo-1B. All results presented are based on data publicly released by the organizers during the competition period. The results are presented in section~\ref{sec:Result} and section~\ref{sec:Ablation}.
 
 All training was performed using LoRA \cite{hu2022lora} for model fine-tuning, with Rank, alpha, and dropout set to 8, 32, and 0.05, respectively. 
-For GCIL, $\alpha$ is set as 1. For the training hyperparameters, we used the following settings:$epoch=5$, $lr=1e-4$, and $batch=32$. All experiments were conducted on a single Nvidia A100 (40G) GPU, and each unlearning process was completed within one hour.
+For EUL, $\alpha$ is set as 1. For the training hyperparameters, we used the following settings:$epoch=5$, $lr=1e-4$, and $batch=32$. All experiments were conducted on a single Nvidia A100 (40G) GPU, and each unlearning process was completed within one hour.
 
 \section{Result}
 \label{sec:Result}
@@ -416,40 +416,40 @@ For GCIL, $\alpha$ is set as 1. For the training hyperparameters, we used the fo
 %Result 5
 %句子1:table2展示了我们的系统在装配了不同组件下的效果。
 %句子2:其中NR、RF之类的分别指什么。
-%谁高谁低，谁是最好的，用一到两句话解释好坏的原因，为什么RD和GI要留下，为什么NR不能要
+%谁高谁低，谁是最好的，用一到两句话解释好坏的原因，为什么RD和EUL要留下，为什么NR不能要
 %由于计算资源的限制，在比赛结束日前，我们拿到的最好结果是倒数第二行，因此我们提交了这个方案。
-%表1展示了我们使用的不同方法的组合对效果的影响。其中GI denotes Gradient Contrast Interference Loss, NR indicates that the original outputs for the forgotten data were replaced with negative responses, 其中 NR所使用的negative responses来自于\citep{tofu2024} , DA signifies the inclusion of data augmentation during training, RD表示对保留集的数据进行finetune, EP represents the number of epochs, and LR denotes the learning rate. 此外我们使用MIA, Task, MMLU, Final分别来指代MIA Score, Task Aggregate Score, MMLU Score以及三者取平均得到的最终得分。
+%表1展示了我们使用的不同方法的组合对效果的影响。其中EUL denotes Effective Unlearning Loss, NR indicates that the original outputs for the forgotten data were replaced with negative responses, 其中 NR所使用的negative responses来自于\citep{tofu2024} , DA signifies the inclusion of data augmentation during training, RD表示对保留集的数据进行finetune, EP represents the number of epochs, and LR denotes the learning rate. 此外我们使用MIA, Task, MMLU, Final分别来指代MIA Score, Task Aggregate Score, MMLU Score以及三者取平均得到的最终得分。
 
-Table~\ref{tab:AS2} illustrates the impact of different method combinations on performance. Here, GI denotes Gradient Contrast Interference Loss, NR indicates that the original outputs for the forgotten data are replaced with safety terms. DA is the inclusion of data augmentation during training, RD refers to supervised fine-tuning the data in the retain set,
+Table~\ref{tab:AS2} illustrates the impact of different method combinations on performance. Here, EUL denotes Effective Unlearning Loss, NR indicates that the original outputs for the forgotten data are replaced with safety terms. DA is the inclusion of data augmentation during training, RD refers to supervised fine-tuning the data in the retain set,
 % EP represents the number of epochs, and LR denotes the learning rate. Additionally, we use MIA, TAS, MMLU, and Final to refer to the MIA Score, Task Aggregate Score, MMLU Score, and the final score, which is the average of the three. Finally, in the experimental tables, 
 "×" denotes the absence of the corresponding technique, while "O" indicates its application.
 
-%从表1中可以看出，在使用GCIL处理遗忘数据的同时加入数据增强和finetune retain data可以获得最高的效果，这是因为这么做可以同时兼顾不同类型任务以及不同类型的数据。而随着negative responses的加入，效果会随之下降，这可能是因为被遗忘数据同时受到两种损失的影响使得梯度难以始终沿着一个方向进行优化导致的。
+%从表1中可以看出，在使用EUL处理遗忘数据的同时加入数据增强和finetune retain data可以获得最高的效果，这是因为这么做可以同时兼顾不同类型任务以及不同类型的数据。而随着negative responses的加入，效果会随之下降，这可能是因为被遗忘数据同时受到两种损失的影响使得梯度难以始终沿着一个方向进行优化导致的。
 
 % As shown in table~\ref{tab:AS2}, t
-% The best performance is achieved when GCIL is applied to process forgotten data, combined with data augmentation and fine-tuning the retain data. This approach is effective because it simultaneously accommodates different task types and data types. However, the inclusion of negative responses results in a decline in performance. This may be due to the limited amount of forgotten data, where the simultaneous influence of two different loss functions causes the gradients to struggle to optimize consistently in a single effective direction.
+% The best performance is achieved when EUL is applied to process forgotten data, combined with data augmentation and fine-tuning the retain data. This approach is effective because it simultaneously accommodates different task types and data types. However, the inclusion of negative responses results in a decline in performance. This may be due to the limited amount of forgotten data, where the simultaneous influence of two different loss functions causes the gradients to struggle to optimize consistently in a single effective direction.
 
 %由于计算资源的限制，在比赛结束日前，我们拿到的最好结果是表1中第8行的方案，因此我们提交了这个方案。
 
-% Due to computational resource limitations, the best result we achieved before the competition deadline was from the eighth configuration in table~\ref{tab:AS2} (RD\&NR\&GI). Therefore, we submitted this configuration.
-% 当使用 GCIL 处理遗忘数据，并结合数据增强和微调保留数据时，性能最佳。其成功的原因在于可以多任务训练框架可以很好的平衡遗忘与保留。此外我们还可以得到以下key findings
+% Due to computational resource limitations, the best result we achieved before the competition deadline was from the eighth configuration in table~\ref{tab:AS2} (RD\&NR\&EUL). Therefore, we submitted this configuration.
+% 当使用 EUL 处理遗忘数据，并结合数据增强和微调保留数据时，性能最佳。其成功的原因在于可以多任务训练框架可以很好的平衡遗忘与保留。此外我们还可以得到以下key findings
 
 % 1. 无论采用何种技术组合，微调保留数据都是必不可少的。丢弃RD的试验会导致MMLU分数大幅下降，表明其对应的模型语言能力严重退化。
-% 2. 尽管NR的加入对MMLU会有收益，但是其会损害Unlearning的效果。其原因在于数据量较小所以非常容易过拟合。相比之下GCIL在MMLU和Unlearning的平衡上做的更好
+% 2. 尽管NR的加入对MMLU会有收益，但是其会损害Unlearning的效果。其原因在于数据量较小所以非常容易过拟合。相比之下EUL在MMLU和Unlearning的平衡上做的更好
 % 3. DA的加入对于MIA指标有明显增益，但是会略微牺牲MMLU指标。由于最终评分为三个分数的平均，因此总体来看DA具备明显的正向收益。
-The best performance is achieved when using GCIL to process forgotten data while incorporating data augmentation and fine-tuning retained data. This success can be attributed to the multi-task training framework, which effectively balances forgetting and retention.
-%新增, 给出了仅使用GI以及GI+DA虽然数值上好看，但是MMLU大幅下降，这是与竞赛目标相悖的。
-It is important to note that although the approaches employing only GI or the combination of GI and DA in Table 1 achieve relatively high scores, this performance comes at the significant expense of reduced scores on the MMLU benchmark. Such a substantial degradation implies that the intrinsic capability of the model is severely compromised, which contradicts the intended evaluation criteria of the task. Consequently, these two approaches were not selected as our optimal methods.
+The best performance is achieved when using EUL to process forgotten data while incorporating data augmentation and fine-tuning retained data. This success can be attributed to the multi-task training framework, which effectively balances forgetting and retention.
+%新增, 给出了仅使用EUL以及EUL+DA虽然数值上好看，但是MMLU大幅下降，这是与竞赛目标相悖的。
+It is important to note that although the approaches employing only EUL or the combination of EUL and DA in Table 1 achieve relatively high scores, this performance comes at the significant expense of reduced scores on the MMLU benchmark. Such a substantial degradation implies that the intrinsic capability of the model is severely compromised, which contradicts the intended evaluation criteria of the task. Consequently, these two approaches were not selected as our optimal methods.
 Additionally, we derive the following key findings:
 \begin{itemize}
 	\item Fine-tuning on retained data is essential, regardless of the chosen technique combination. Experiments omitting RD resulted in a significant drop in MMLU scores, indicating severe degradation in the model’s linguistic capabilities.
-	\item Although adding NR improves MMLU, it negatively impacts the unlearning effectiveness. This is due to the small dataset size, making it highly prone to overfitting. In contrast, GCIL achieves a better balance between MMLU and unlearning performance.
+	\item Although adding NR improves MMLU, it negatively impacts the unlearning effectiveness. This is due to the small dataset size, making it highly prone to overfitting. In contrast, EUL achieves a better balance between MMLU and unlearning performance.
 	\item Incorporating DA enhances the MIA metric, albeit with a slight trade-off in MMLU. However, since the final score is the average of the three metrics, DA provides an overall positive impact.
 \end{itemize}
 
-% 由于计算资源的限制，在比赛deadline之前，我们拿到的最平衡的结果是RD\&NR\&GI。因此，我们当时提交了这个方案。
+% 由于计算资源的限制，在比赛deadline之前，我们拿到的最平衡的结果是RD\&NR\&EUL。因此，我们当时提交了这个方案。
 
-Due to computational constraints, the most balanced result we obtained before the competition deadline was (RD\&NR\&GI). Therefore, our result on the leaderboard is (RD\&NR\&GI) result, not our best result.
+Due to computational constraints, the most balanced result we obtained before the competition deadline was (RD\&NR\&EUL). Therefore, our result on the leaderboard is (RD\&NR\&EUL) result, not our best result.
 
 % Ablation Study
 %任务系统外，我们还对如下内容进行了消融实验
@@ -467,15 +467,15 @@ Due to computational constraints, the most balanced result we obtained before th
 %表2删掉EP和LR，上面加个配置
 \section{Ablation Study}
 \label{sec:Ablation}
-%针对我们的系统，我们还对GCIL、finetune retain data、数据增强、参数敏感性分别进行了消融实验。并尝试了进一步扩展GCIL。我们列出了一部分重要的结果，全部的消融实验结果可以在附录A种查看。
+%针对我们的系统，我们还对EUL、finetune retain data、数据增强、参数敏感性分别进行了消融实验。并尝试了进一步扩展EUL。我们列出了一部分重要的结果，全部的消融实验结果可以在附录A种查看。
 
 % For our system, w
-% We also conducted ablation experiments on GCIL, fine-tuning the retain data, data augmentation, and parameter sensitivity, and further explored the extension of GCIL. We present a subset of the key results here, with the complete ablation results available in Appendix~\ref{sec:appendixA}.
+% We also conducted ablation experiments on EUL, fine-tuning the retain data, data augmentation, and parameter sensitivity, and further explored the extension of EUL. We present a subset of the key results here, with the complete ablation results available in Appendix~\ref{sec:appendixA}.
 
-We also explores the impact of different hyperparamter settings, including learning rate, epoch, and magnitude scaling of GCIL. We present the results in the following sections, and attach all experiment results in the Appendix~\ref{sec:appendixA}.
+We also explores the impact of different hyperparamter settings, including learning rate, epoch, and magnitude scaling of EUL. We present the results in the following sections, and attach all experiment results in the Appendix~\ref{sec:appendixA}.
 \iffalse
 % \subsection{梯度干扰及使用原文}
-\subsection{Gradient Contrast Interference Loss \& Fine-tune Retain Data} 
+\subsection{Effective Unlearning Loss \& Fine-tune Retain Data} 
 
 \begin{table}[h]\footnotesize
   \centering
@@ -484,18 +484,18 @@ We also explores the impact of different hyperparamter settings, including learn
         ~ & MIA & TAS & MMLU & Final \\ \hline
         NR & 0.00 & 0.09 & 0.28 & 0.12 \\ \hline
         NR\&RD & 0.00 & 0.12 & 0.28 & 0.14 \\ \hline
-        GI & 0.99 & 0.41 & 0.23 & 0.54 \\ \hline
-        GI\&RD & 0.01 & 0.19 & 0.28 & 0.16 \\ \hline
-        GI\&RD\&DA & 0.59 & 0.39 & 0.28 & 0.42 \\ \hline
-        NR\&GI\&RD\&DA & 0.02 & 0.23 & 0.28 & 0.18 \\ \hline
+        EUL & 0.99 & 0.41 & 0.23 & 0.54 \\ \hline
+        EUL\&RD & 0.01 & 0.19 & 0.28 & 0.16 \\ \hline
+        EUL\&RD\&DA & 0.59 & 0.39 & 0.28 & 0.42 \\ \hline
+        NR\&EUL\&RD\&DA & 0.02 & 0.23 & 0.28 & 0.18 \\ \hline
     \end{tabular}
   \caption{The effects of each part of the system.}
   \label{tab:accents}
 \end{table}
 
-%表2表明，无论采用哪种方法，微调保留数据都是必不可少的。通过对比微调保留数据前后的输出，我们发现省略微调保留数据会导致模型变得不可控，导致其重复生成相同的单词。这个问题也反映在 MMLU 分数上，当不使用保留数据时，MMLU 分数大幅下降，表明模型的语言能力严重恶化。此外，梯度干扰和负响应替换相关的结果表明，加入梯度干扰显着改善了遗忘效果，同时保留了模型的语言能力；然而，引入负替代会导致性能整体下降，这是由于被遗忘的数据数据量较小，难以同时支撑两个优化目标的引入。并且表4还表明了使用GCIL会比negative response replacement更加有效。 
+%表2表明，无论采用哪种方法，微调保留数据都是必不可少的。通过对比微调保留数据前后的输出，我们发现省略微调保留数据会导致模型变得不可控，导致其重复生成相同的单词。这个问题也反映在 MMLU 分数上，当不使用保留数据时，MMLU 分数大幅下降，表明模型的语言能力严重恶化。此外，梯度干扰和负响应替换相关的结果表明，加入梯度干扰显着改善了遗忘效果，同时保留了模型的语言能力；然而，引入负替代会导致性能整体下降，这是由于被遗忘的数据数据量较小，难以同时支撑两个优化目标的引入。并且表4还表明了使用EUL会比negative response replacement更加有效。 
 
-Table 1 and Table 2 indicate that fine-tuning the retain data is essential, regardless of whether GCIL or negative response replacement is used. A comparison of the outputs before and after fine-tuning the retain data reveals that omitting this step results in the model becoming uncontrollable, leading to the repeated generation of the same words. This issue is also reflected in the MMLU scores, which experience a significant decline when the retain data is excluded, indicating a severe deterioration in the model's language abilities. Furthermore, the results related to GCIL and negative response replacement show that incorporating GCIL significantly enhances the forgetting effect while maintaining the model's linguistic capabilities. However, the introduction of negative response replacement leads to an overall decrease in performance, likely due to the limited amount of forgotten data, which makes it difficult to support both optimization objectives simultaneously. Additionally, Table 2 demonstrates that the use of GCIL is more effective than negative response replacement.
+Table 1 and Table 2 indicate that fine-tuning the retain data is essential, regardless of whether EUL or negative response replacement is used. A comparison of the outputs before and after fine-tuning the retain data reveals that omitting this step results in the model becoming uncontrollable, leading to the repeated generation of the same words. This issue is also reflected in the MMLU scores, which experience a significant decline when the retain data is excluded, indicating a severe deterioration in the model's language abilities. Furthermore, the results related to EUL and negative response replacement show that incorporating EUL significantly enhances the forgetting effect while maintaining the model's linguistic capabilities. However, the introduction of negative response replacement leads to an overall decrease in performance, likely due to the limited amount of forgotten data, which makes it difficult to support both optimization objectives simultaneously. Additionally, Table 2 demonstrates that the use of EUL is more effective than negative response replacement.
 
 % \subsection{数据增强}
 \subsection{Data Augmentation} 
@@ -512,18 +512,18 @@ The comparison in Table 2 shows that the incorporation of data augmentation furt
 Table~\ref{tab:AS1} illustrates the variations in the performance of our method under different parameters. Due to computational resource limitations, we are only able to test results up to a maximum of 5 epochs. However, it is evident that as the number of epochs increases, there is still room for improvement in our method.
 
 %新增修改，表3改名
-\subsection{Amplify GCIL} 
-To further examine the impact of our GCIL approach, we square its gradient signals to produce more extreme upper and lower bounds for the loss variation. However, as demonstrated in table~\ref{tab:accents}, this magnitude scaling does not yield any noticeable performance improvement.
+\subsection{Amplify EUL} 
+To further examine the impact of our EUL approach, we square its gradient signals to produce more extreme upper and lower bounds for the loss variation. However, as demonstrated in table~\ref{tab:accents}, this magnitude scaling does not yield any noticeable performance improvement.
 
 \begin{table}[h]\footnotesize
   \centering
     \begin{tabular}{l|l|l|l|l}
     \hline
         ~ & MIA & TAS & MMLU & Final \\ \hline
-        GI & 0.59 & 0.39 & 0.28 & 0.42 \\ \hline
-        GI$^2$ & 0.39 & 0.22 & 0.28 & 0.29 \\ \hline
+        EUL & 0.59 & 0.39 & 0.28 & 0.42 \\ \hline
+        EUL$^2$ & 0.39 & 0.22 & 0.28 & 0.29 \\ \hline
     \end{tabular}
-  \caption{Further exploration of GCIL capabilities.}
+  \caption{Further exploration of EUL capabilities.}
   \label{tab:accents}
 \end{table}
 
@@ -536,12 +536,12 @@ To further examine the impact of our GCIL approach, we square its gradient signa
 % SemEval-2025 Task4的组织者推出了一个极具挑战性的Machine Unlearning数据集，包含多种不同类型数据和角度的unlearn能力评估。该数据集充分反映了Machine Unlearning当前所面临的诸多挑战。
 The organizers of SemEval-2025 Task 4 introduced three Machine Unlearning datasets, designed to assess unlearning capabilities from multiple perspectives and across various data types. This dataset effectively highlights the key challenges currently faced in Machine Unlearning.
 
-% 在本次比赛中，我们提出了一种更加可控的遗忘Loss：GCIL。我们将其同标准SFT 融合成多任务学习目标，确保模型遗忘的精准性并最大程度保留其通用能力。我们还为其搭配了不同的数据处理与增强策略，从而探索可控的遗忘训练。
+% 在本次比赛中，我们提出了一种更加可控的遗忘Loss：EUL。我们将其同标准SFT 融合成多任务学习目标，确保模型遗忘的精准性并最大程度保留其通用能力。我们还为其搭配了不同的数据处理与增强策略，从而探索可控的遗忘训练。
 
-In this competition, we proposed a more controllable forgetting loss, GCIL, which we integrated with standard Supervised Fine-Tuning (SFT) into a multi-task learning framework. This approach ensures precise unlearning while maximizing the retention of general capabilities. Additionally, we incorporated various data processing and augmentation strategies to further enhance controllable unlearning.
+In this competition, we proposed a more controllable forgetting loss, EUL, which we integrated with standard Supervised Fine-Tuning (SFT) into a multi-task learning framework. This approach ensures precise unlearning while maximizing the retention of general capabilities. Additionally, we incorporated various data processing and augmentation strategies to further enhance controllable unlearning.
 
-% 我们的试验证明了GCIL的有效性。同时我们也highlight了Unlearning任务中标准SFT对于需要保留的数据的训练的重要性。这种遗忘-保留的平衡是Unlearning成功的关键。同时我们还为处理数据长尾问题提供了一个行之有效的数据增强解决方案。最终我们在赛方提供的leaderboard上拿到了第五名。
-Our experiments demonstrated the effectiveness of GCIL and underscored the critical role of standard SFT in training on retained data. Striking the right balance between forgetting and retention is essential for successful unlearning. Furthermore, we introduced an effective data augmentation solution to address the long-tail distribution in text length. Ultimately, our system ranked 5th on the official leaderboard.
+% 我们的试验证明了EUL的有效性。同时我们也highlight了Unlearning任务中标准SFT对于需要保留的数据的训练的重要性。这种遗忘-保留的平衡是Unlearning成功的关键。同时我们还为处理数据长尾问题提供了一个行之有效的数据增强解决方案。最终我们在赛方提供的leaderboard上拿到了第五名。
+Our experiments demonstrated the effectiveness of EUL and underscored the critical role of standard SFT in training on retained data. Striking the right balance between forgetting and retention is essential for successful unlearning. Furthermore, we introduced an effective data augmentation solution to address the long-tail distribution in text length. Ultimately, our system ranked 5th on the official leaderboard.
 
 
 % \section*{Acknowledgments}
@@ -571,25 +571,25 @@ Our experiments demonstrated the effectiveness of GCIL and underscored the criti
 
 \bibliography{custom}
 
-\newpage
+% \newpage
 \appendix
 \onecolumn
 \section{Appendix: Ablation Study}\nopagebreak[4]
 % \Large\textbf{Appendix: Ablation Study}
-% \nopagebreak
+\nopagebreak
 \label{sec:appendixA}
 
 
 \begin{longtable}[h]{|r|r|l|l|l|l|l|r|r|l|r|}
 % First page header
 \hline
-\multicolumn{1}{|c|}{\textbf{EP}} & \multicolumn{1}{c|}{\textbf{LR}} & \multicolumn{1}{c|}{\textbf{RD}} & \multicolumn{1}{c|}{\textbf{NR}} & \multicolumn{1}{c|}{\textbf{DA}} & \multicolumn{1}{c|}{\textbf{GI}} & \multicolumn{1}{c|}{\textbf{GI2}} & \multicolumn{1}{c|}{\textbf{MIA}} & \multicolumn{1}{c|}{\textbf{TAS}} & \multicolumn{1}{c|}{\textbf{MMLU}} & \multicolumn{1}{c|}{\textbf{Final}} \\ 
+\multicolumn{1}{|c|}{\textbf{EP}} & \multicolumn{1}{c|}{\textbf{LR}} & \multicolumn{1}{c|}{\textbf{RD}} & \multicolumn{1}{c|}{\textbf{NR}} & \multicolumn{1}{c|}{\textbf{DA}} & \multicolumn{1}{c|}{\textbf{EUL}} & \multicolumn{1}{c|}{\textbf{EUL2}} & \multicolumn{1}{c|}{\textbf{MIA}} & \multicolumn{1}{c|}{\textbf{TAS}} & \multicolumn{1}{c|}{\textbf{MMLU}} & \multicolumn{1}{c|}{\textbf{Final}} \\ 
 \hline
 \endfirsthead
 
 % Header for subsequent pages
 \hline
-\multicolumn{1}{|c|}{\textbf{EP}} & \multicolumn{1}{c|}{\textbf{LR}} & \multicolumn{1}{c|}{\textbf{RD}} & \multicolumn{1}{c|}{\textbf{NR}} & \multicolumn{1}{c|}{\textbf{DA}} & \multicolumn{1}{c|}{\textbf{GI}} & \multicolumn{1}{c|}{\textbf{GI2}} & \multicolumn{1}{c|}{\textbf{MIA}} & \multicolumn{1}{c|}{\textbf{TAS}} & \multicolumn{1}{c|}{\textbf{MMLU}} & \multicolumn{1}{c|}{\textbf{Final}} \\
+\multicolumn{1}{|c|}{\textbf{EP}} & \multicolumn{1}{c|}{\textbf{LR}} & \multicolumn{1}{c|}{\textbf{RD}} & \multicolumn{1}{c|}{\textbf{NR}} & \multicolumn{1}{c|}{\textbf{DA}} & \multicolumn{1}{c|}{\textbf{EUL}} & \multicolumn{1}{c|}{\textbf{EUL2}} & \multicolumn{1}{c|}{\textbf{MIA}} & \multicolumn{1}{c|}{\textbf{TAS}} & \multicolumn{1}{c|}{\textbf{MMLU}} & \multicolumn{1}{c|}{\textbf{Final}} \\
 \hline
 \endhead
 
