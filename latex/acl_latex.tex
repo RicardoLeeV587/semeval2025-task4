@@ -336,7 +336,7 @@ In addition, we also try the negative response replace scheme mentioned in \cite
 \end{table*}
 
 
-\begin{table*}[t]
+\begin{table*}
   \centering
     \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|}
     \hline
@@ -355,6 +355,9 @@ In addition, we also try the negative response replace scheme mentioned in \cite
     Ablation study on hyper-parameters }
 \label{tab:AS1}
 \end{table*}
+
+
+%为了进一步探索我们的梯度干扰方法的影响，我们通过对其平方来让损失的变化上下限更加极端，表3的结果显示，损失的变化更加极端并不会带来有效的增益，我们认为这是由于过大的损失会令模型受到难以修复的破坏。
 
 
 
@@ -410,6 +413,26 @@ For EUL, $\alpha$ is set as 1. For the training hyperparameters, we use the foll
 
 \section{Result}
 \label{sec:Result}
+
+\begin{table*}[!ht]
+  \centering
+    \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|l|}
+    \hline
+        Epoch & Step & LR & RD & NR & DA & EUL & MIA & TAS & MMLU & Final \\ \hline
+        3 & 484 & 1.00E-04 & O & × & O & O & 0.135 & 0.245 & 0.272 & 0.217 \\ \hline
+        % 3 & 210 & 1.00E-04 & O & × & × & O & 0.000 & 0.092 & 0.275 & 0.122 \\ \hline
+        6.86 & 484 & 1.00E-04 & O & × & × & O & 0.020 & 0.103 & 0.289 & 0.137 \\ \hline
+        4 & 646 & 1.00E-04 & O & × & O & O & 0.215 & 0.278 & 0.270 & 0.254 \\ \hline
+        % 4 & 281 & 1.00E-04 & O & × & × & O & 0.001 & 0.093 & 0.278 & 0.124 \\ \hline
+        9.16 & 646 & 1.00E-04 & O & × & × & O & 0.075 & 0.265 & 0.287 & 0.209 \\ \hline
+        5 & 807 & 1.00E-04 & O & × & O & O & 0.593 & 0.395 & 0.275 & 0.421 \\ \hline
+        % 5 & 351 & 1.00E-04 & O & × & × & O & 0.005 & 0.194 & 0.275 & 0.128 \\ \hline
+        11.45 & 807 & 1.00E-04 & O & × & × & O & 0.175 & 0.306 & 0.286 & 0.255 \\ \hline
+    \end{tabular}
+  \caption{
+    Data Augmentation and Training Steps }
+\label{tab:DA_TS}
+\end{table*}
 
 %Experiment setup只写表2中的内容
 
@@ -479,7 +502,7 @@ We also explore the impact of different hyperparamter settings, including learni
 % \subsection{梯度干扰及使用原文}
 \subsection{Effective Unlearning Loss \& Fine-tune Retain Data} 
 
-\begin{table}[h]\footnotesize
+\begin{table}\footnotesize
   \centering
     \begin{tabular}{l|l|l|l|l}
     \hline
@@ -513,11 +536,19 @@ The comparison in Table 2 shows that the incorporation of data augmentation furt
 %表1显示了在不同参数下，我们的新方法与提交的方法的结果，可以明显看出，两种方法都对于参数非常的敏感，会随着训练的加长效果不断变好。
 Table~\ref{tab:AS1} demonstrates the performance variations under different hyperparameters. Due to computational resource limitations, we are only able to test results up to a maximum of 5 epochs. However, it is evident that as the epoch number and learning rate increase, the performance increases
 
+\subsection{Data Augmentation and Training Steps}
+
+To examine whether the performance improvements from data augmentation are solely due to the increased number of training steps, we conducted a series of controlled experiments, as shown in Table~\ref{tab:DA_TS}. Specifically, we compared models trained with data augmentation for 3, 4, and 5 epochs to models trained for the same number of steps without data augmentation. The results indicate that while extending the number of training steps does lead to some improvement, the gains from data augmentation remain consistently larger, suggesting that data augmentation provides additional benefits beyond simply increasing training steps.
+
+%为了进一步明确数据增强的增益并非简单的训练集规模增大导致每个 epoch 的更新次数增加，我们设计了表4中的实验，我们分别对比了epoch为3，4，5时采用了数据增强的方案，与相同步数下不使用数据增强的方案，我们可以发现随着训练步数的增加虽然确实可以带来效果的增强，但是这些增益仍然是小于数据增强带来的增益。
+
+
+
 %新增修改，表3改名
 \subsection{Amplify EUL} 
 To further examine the impact of our EUL approach, we square the EUL to produce more extreme upper and lower bounds for the loss variation. However, as demonstrated in table~\ref{tab:accents}, this magnitude scaling does not yield any noticeable performance improvement.
 
-\begin{table}[h]\footnotesize
+\begin{table}\footnotesize
   \centering
     \begin{tabular}{l|l|l|l|l}
     \hline
@@ -529,33 +560,8 @@ To further examine the impact of our EUL approach, we square the EUL to produce 
   \label{tab:accents}
 \end{table}
 
-%为了进一步探索我们的梯度干扰方法的影响，我们通过对其平方来让损失的变化上下限更加极端，表3的结果显示，损失的变化更加极端并不会带来有效的增益，我们认为这是由于过大的损失会令模型受到难以修复的破坏。
 
-\subsection{Data Augmentation and Training Steps}
 
-\begin{table*}[t]
-  \centering
-    \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|l|}
-    \hline
-        Epoch & Step & LR & RD & NR & DA & EUL & MIA & TAS & MMLU & Final \\ \hline
-        3 & 484 & 1.00E-04 & O & × & O & O & 0.135 & 0.245 & 0.272 & 0.217 \\ \hline
-        3 & 210 & 1.00E-04 & O & × & × & O & 0.000 & 0.092 & 0.275 & 0.122 \\ \hline
-        6.86 & 484 & 1.00E-04 & O & × & × & O & 0.020 & 0.103 & 0.289 & 0.137 \\ \hline
-        4 & 646 & 1.00E-04 & O & × & O & O & 0.215 & 0.278 & 0.270 & 0.254 \\ \hline
-        4 & 281 & 1.00E-04 & O & × & × & O & 0.001 & 0.093 & 0.278 & 0.124 \\ \hline
-        9.16 & 646 & 1.00E-04 & O & × & × & O & 0.075 & 0.265 & 0.287 & 0.209 \\ \hline
-        5 & 807 & 1.00E-04 & O & × & O & O & 0.593 & 0.395 & 0.275 & 0.421 \\ \hline
-        5 & 351 & 1.00E-04 & O & × & × & O & 0.005 & 0.194 & 0.275 & 0.128 \\ \hline
-        11.45 & 807 & 1.00E-04 & O & × & × & O & 0.175 & 0.306 & 0.286 & 0.255 \\ \hline
-    \end{tabular}
-  \caption{
-    Ablation study on hyper-parameters }
-\label{tab:AS1}
-\end{table*}
-
-To examine whether the performance improvements from data augmentation are solely due to the increased number of training steps, we conducted a series of controlled experiments, as shown in Table 4. Specifically, we compared models trained with data augmentation for 3, 4, and 5 epochs to models trained for the same number of steps without data augmentation. The results indicate that while extending the number of training steps does lead to some improvement, the gains from data augmentation remain consistently larger, suggesting that data augmentation provides additional benefits beyond simply increasing training steps.
-
-%为了进一步明确数据增强的增益并非简单的训练集规模增大导致每个 epoch 的更新次数增加，我们设计了表4中的实验，我们分别对比了epoch为3，4，5时采用了数据增强的方案，与相同步数下不使用数据增强的方案，我们可以发现随着训练步数的增加虽然确实可以带来效果的增强，但是这些增益仍然是小于数据增强带来的增益。
 
 
 
